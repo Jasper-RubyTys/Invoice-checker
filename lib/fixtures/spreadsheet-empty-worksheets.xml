@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="Blad1">
+  <Table ss:ExpandedColumnCount="1" ss:DefaultRowHeight="15">
+   <Row/>
+  </Table>
+ </Worksheet>
+ <Worksheet ss:Name="Blad2">
+  <Table ss:ExpandedColumnCount="1" ss:DefaultRowHeight="15">
+   <Row/>
+  </Table>
+ </Worksheet>
+</Workbook>

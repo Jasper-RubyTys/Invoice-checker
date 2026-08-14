@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Worksheet ss:Name="Blad1">
+  <Table ss:ExpandedColumnCount="10" x:FullColumns="1" x:FullRows="1" ss:DefaultRowHeight="15">
+   <Row>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Klant Naam</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">Debiteurnr.:</Data></Cell>
+    <Cell><Data ss:Type="String">Factuurnr:</Data></Cell>
+    <Cell><Data ss:Type="String">Factuurdatum:</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Totaal Bedrag</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Adresregel 1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">DEB123</Data></Cell>
+    <Cell><Data ss:Type="String">F-2026-001</Data></Cell>
+    <Cell><Data ss:Type="String">15/07/26</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">150.00</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Adresregel 2</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeAcross="4"><Data ss:Type="String">Bij betaling vermelden s.v.p.</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">Uw BTW nr.: NL999999999B01</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">Datum</Data></Cell>
+    <Cell><Data ss:Type="String">Order</Data></Cell>
+    <Cell><Data ss:Type="String">Omschrijving</Data></Cell>
+    <Cell><Data ss:Type="String">Dienst</Data></Cell>
+    <Cell><Data ss:Type="String">Artikel</Data></Cell>
+    <Cell><Data ss:Type="String">Klantgroep</Data></Cell>
+    <Cell><Data ss:Type="String">Omschrijving Dienst</Data></Cell>
+    <Cell><Data ss:Type="String">Aantal</Data></Cell>
+    <Cell><Data ss:Type="String">Eenheid</Data></Cell>
+    <Cell><Data ss:Type="String">Bedrag</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">01/07/26</Data></Cell>
+    <Cell><Data ss:Type="String">ORD1</Data></Cell>
+    <Cell><Data ss:Type="String">CONTAINERREF1</Data></Cell>
+    <Cell><Data ss:Type="String">INS</Data></Cell>
+    <Cell><Data ss:Type="String">ART1</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Inslagkosten</Data></Cell>
+    <Cell><Data ss:Type="String">100</Data></Cell>
+    <Cell><Data ss:Type="String">STUKS</Data></Cell>
+    <Cell><Data ss:Type="String">50.00</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">01/07/26</Data></Cell>
+    <Cell><Data ss:Type="String">ORD1</Data></Cell>
+    <Cell><Data ss:Type="String">CONTAINERREF1</Data></Cell>
+    <Cell><Data ss:Type="String">INS</Data></Cell>
+    <Cell><Data ss:Type="String">ART2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Inslagkosten</Data></Cell>
+    <Cell><Data ss:Type="String">50</Data></Cell>
+    <Cell><Data ss:Type="String">STUKS</Data></Cell>
+    <Cell><Data ss:Type="String">25.00</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">02/07/26</Data></Cell>
+    <Cell><Data ss:Type="String">ORD2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">LABEL</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Labeling en stickering</Data></Cell>
+    <Cell><Data ss:Type="String">20</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">40.00</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">02/07/26</Data></Cell>
+    <Cell><Data ss:Type="String">ORD2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">CTN+</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Extra ctn in container per500</Data></Cell>
+    <Cell><Data ss:Type="String">2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">35.00</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+ <Worksheet ss:Name="Blad2">
+  <Table ss:ExpandedColumnCount="1" x:FullColumns="1" x:FullRows="1" ss:DefaultRowHeight="15">
+   <Row/>
+  </Table>
+ </Worksheet>
+</Workbook>

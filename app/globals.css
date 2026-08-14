@@ -1,0 +1,701 @@
+@import "tailwindcss";
+
+/* Design tokens ported from the ruby-crm monorepo's @ruby-crm/ui package
+   (packages/ui/src/tokens.css + themes.css) — RT-CRM-HS house style,
+   "Sunset · Coral" colorway. Not imported (that package is a workspace-only
+   Vite/React-Router build, not usable from this standalone Next.js app) —
+   values are copied so this app matches the internal CRM's visual language. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --color-*: initial;
+  --spacing-*: initial;
+  --radius-*: initial;
+  --text-*: initial;
+  --font-weight-*: initial;
+  --tracking-*: initial;
+  --shadow-*: initial;
+  --ease-*: initial;
+
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-xxs: 3px;
+  --radius-xs: 5px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius-full: 9999px;
+
+  --spacing-0: 0px;
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-md: 16px;
+  --text-md--line-height: 22px;
+  --text-lg: 20px;
+  --text-lg--line-height: 25px;
+  --text-xl: 24px;
+  --text-xl--line-height: 30px;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 34px;
+  --text-3xl: 56px;
+  --text-3xl--line-height: 64px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.06em;
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-canvas-page: #ffffff;
+  --color-canvas-raised: #f5f5f5;
+  --color-canvas-inset: #e9e9ec;
+
+  --color-foreground: #18181b;
+  --color-foreground-muted: #525252;
+  --color-foreground-subtle: #767676;
+
+  --color-gray-2: #dddddd;
+  --color-gray-3: #d0d0d0;
+  --color-gray-4: #c1c1c1;
+  --color-gray-5: #767676;
+  --color-gray-6: #525252;
+  --color-divider: #ebebeb;
+  --color-border-subtle: #dddddd;
+  --color-border-strong: #d0d0d0;
+
+  /* Brand = "Sunset · Coral". `ruby` is a warm coral-rose, not red — red is
+     reserved for `danger` (destructive/error states) only. */
+  --color-ruby: #d2375a;
+  --color-ruby-pressed: #bd2e4e;
+  --color-ruby-fg: #c62d5a;
+  --color-ruby-ink: #61122a;
+  --color-ruby-bg: #fce0e8;
+  --color-ruby-tint: #fdeef2;
+
+  --color-danger: #d42a3a;
+  --color-success: #17835a;
+  --color-warning: #cc7a0a;
+  --color-info: #3b6fe0;
+
+  --color-teal-bg: #99f6e4;
+  --color-teal-fg: #115e59;
+  --color-green-bg: #cce6ce;
+  --color-green-fg: #0d411a;
+  --color-yellow-bg: #fcd34d;
+  --color-yellow-fg: #713f12;
+  --color-orange-bg: #fdba74;
+  --color-orange-fg: #8f2f09;
+  --color-red-bg: #fca5a5;
+  --color-red-fg: #991b1b;
+  --color-gray-bg: #e5e5e5;
+  --color-gray-fg: #525252;
+
+  --gradient-brand: linear-gradient(135deg, #b83a8a 0%, #e63f8c 26%, #f2506a 48%, #f4693f 70%, #f9b234 100%);
+
+  --shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.07);
+
+  --ease-out: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Control-height and motion-duration tokens — deliberately plain custom
+   properties (not a Tailwind @theme scale), matching how ruby-crm keeps its
+   z-index band out of @theme so it doesn't redefine a utility namespace. */
+:root {
+  --h-btn-sm: 32px;
+  --h-btn-md: 40px;
+  --h-btn-lg: 48px;
+  --h-input: 44px;
+  --h-chip: 28px;
+  --duration-fast: 150ms;
+}
+
+[data-theme="dark"] {
+  --color-canvas-page: #111112;
+  --color-canvas-raised: #18181b;
+  --color-canvas-inset: #0a0a0a;
+  --color-foreground: #f0f0f2;
+  --color-foreground-muted: #c8c8cc;
+  --color-foreground-subtle: #9999a0;
+  --color-gray-2: #1c1c1f;
+  --color-gray-3: #232326;
+  --color-gray-4: #2a2a2e;
+  --color-gray-5: #9999a0;
+  --color-gray-6: #c8c8cc;
+  --color-divider: #1a1a1c;
+  --color-border-subtle: #1c1c1f;
+  --color-border-strong: #2a2a2e;
+  --color-ruby: #cf3b5f;
+  --color-ruby-pressed: #b93353;
+  --color-ruby-bg: #3d1620;
+  --color-ruby-tint: #4a1b27;
+  --color-ruby-fg: #f9bcc8;
+  --color-ruby-ink: #f9bcc8;
+  --color-danger: #ff6369;
+  --color-success: #4cc38a;
+  --color-warning: #ffca57;
+  --color-info: #7aa2ff;
+  --color-teal-bg: #0f3e3a;
+  --color-teal-fg: #5eead4;
+  --color-green-bg: #133a1f;
+  --color-green-fg: #86efac;
+  --color-yellow-bg: #3d2e0b;
+  --color-yellow-fg: #fde047;
+  --color-orange-bg: #3d1d0a;
+  --color-orange-fg: #fb923c;
+  --color-red-bg: #3d1416;
+  --color-red-fg: #fca5a5;
+  --color-gray-bg: #2a2a30;
+  --color-gray-fg: #c8c8cc;
+  --shadow-popover: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 16px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-canvas-page: #111112;
+    --color-canvas-raised: #18181b;
+    --color-canvas-inset: #0a0a0a;
+    --color-foreground: #f0f0f2;
+    --color-foreground-muted: #c8c8cc;
+    --color-foreground-subtle: #9999a0;
+    --color-gray-2: #1c1c1f;
+    --color-gray-3: #232326;
+    --color-gray-4: #2a2a2e;
+    --color-gray-5: #9999a0;
+    --color-gray-6: #c8c8cc;
+    --color-divider: #1a1a1c;
+    --color-border-subtle: #1c1c1f;
+    --color-border-strong: #2a2a2e;
+    --color-ruby: #cf3b5f;
+    --color-ruby-pressed: #b93353;
+    --color-ruby-bg: #3d1620;
+    --color-ruby-tint: #4a1b27;
+    --color-ruby-fg: #f9bcc8;
+    --color-ruby-ink: #f9bcc8;
+    --color-danger: #ff6369;
+    --color-success: #4cc38a;
+    --color-warning: #ffca57;
+    --color-info: #7aa2ff;
+    --color-teal-bg: #0f3e3a;
+    --color-teal-fg: #5eead4;
+    --color-green-bg: #133a1f;
+    --color-green-fg: #86efac;
+    --color-yellow-bg: #3d2e0b;
+    --color-yellow-fg: #fde047;
+    --color-orange-bg: #3d1d0a;
+    --color-orange-fg: #fb923c;
+    --color-red-bg: #3d1416;
+    --color-red-fg: #fca5a5;
+    --color-gray-bg: #2a2a30;
+    --color-gray-fg: #c8c8cc;
+    --shadow-popover: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 16px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--color-canvas-page);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: 20px;
+    color: var(--color-foreground);
+    background: var(--color-canvas-page);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-8);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background var(--duration-fast) var(--ease-out), filter var(--duration-fast) var(--ease-out),
+      transform 50ms var(--ease-out);
+  }
+  .btn:active {
+    transform: scale(0.985);
+  }
+  .btn:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .btn.sm {
+    height: var(--h-btn-sm);
+    padding: 0 var(--spacing-12);
+    font-size: var(--text-sm);
+  }
+  .btn.md {
+    height: var(--h-btn-md);
+    padding: 0 var(--spacing-16);
+    font-size: var(--text-sm);
+  }
+  .btn.lg {
+    height: var(--h-btn-lg);
+    padding: 0 var(--spacing-20);
+    font-size: var(--text-md);
+  }
+  .btn.ruby {
+    background-color: var(--color-ruby);
+    background-image: radial-gradient(125% 145% at 50% -25%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%),
+      linear-gradient(135deg, var(--color-ruby) 0%, var(--color-ruby) 38%, #f0663f 100%);
+    color: white;
+  }
+  .btn.ruby:hover {
+    background-color: var(--color-ruby-pressed);
+  }
+  .btn.secondary {
+    background: var(--color-canvas-inset);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-foreground);
+  }
+  .btn.secondary:hover {
+    background: var(--color-gray-2);
+    border-color: var(--color-border-strong);
+  }
+  .btn.ghost {
+    color: var(--color-foreground);
+  }
+  .btn.ghost:hover {
+    background: var(--color-canvas-inset);
+  }
+  .btn.danger {
+    background-color: var(--color-danger);
+    background-image: radial-gradient(125% 145% at 50% -25%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 60%);
+    color: white;
+  }
+  /* Reserved for at most ONE big celebratory action per screen — never use
+     more than once on the same page. */
+  .btn.highlight {
+    background-color: #e63f8c;
+    background-image: radial-gradient(120% 150% at 50% -20%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%),
+      linear-gradient(120deg, #c62d6b 0%, #e63f8c 20%, #f2506a 42%, #f4693f 66%, #f6a12b 100%);
+    color: white;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 4px 14px rgba(230, 63, 140, 0.35);
+  }
+  .btn.highlight:hover {
+    filter: brightness(1.04);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--color-ruby);
+    outline-offset: 2px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-4);
+    height: var(--h-chip);
+    padding: 0 var(--spacing-12);
+    border-radius: var(--radius-full);
+    background: var(--color-canvas-inset);
+    color: var(--color-foreground);
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    white-space: nowrap;
+    letter-spacing: -0.005em;
+  }
+  .chip.green {
+    background: var(--color-green-bg);
+    color: var(--color-green-fg);
+  }
+  .chip.yellow {
+    background: var(--color-yellow-bg);
+    color: var(--color-yellow-fg);
+  }
+  .chip.orange {
+    background: var(--color-orange-bg);
+    color: var(--color-orange-fg);
+  }
+  .chip.red {
+    background: var(--color-red-bg);
+    color: var(--color-red-fg);
+  }
+  .chip.teal {
+    background: var(--color-teal-bg);
+    color: var(--color-teal-fg);
+  }
+  .chip.ruby {
+    background: var(--color-ruby-bg);
+    color: var(--color-ruby-fg);
+  }
+  .chip.gray {
+    background: var(--color-gray-bg);
+    color: var(--color-gray-fg);
+  }
+  :root:not([data-theme="dark"]) .chip.ruby {
+    color: var(--color-ruby-pressed);
+  }
+  :root:not([data-theme="dark"]) .chip.red {
+    color: #8f1919;
+  }
+  [data-theme="dark"] .chip.ruby {
+    color: var(--color-ruby-fg);
+  }
+
+  .card {
+    background: var(--color-canvas-raised);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-16);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-12);
+    overflow: hidden;
+  }
+  .card.secondary {
+    border: 1px solid var(--color-border-subtle);
+  }
+  .card .card-h {
+    min-height: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-12);
+    row-gap: var(--spacing-8);
+  }
+  .card .card-h h2,
+  .card .card-h h3 {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.3;
+  }
+  .card-h-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+  }
+  .card-collapse-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: inherit;
+  }
+  .card-collapse-toggle:hover {
+    background: var(--color-canvas-inset);
+  }
+  .card-chevron {
+    display: inline-block;
+    font-size: var(--text-lg);
+    line-height: 1;
+    transition: transform 0.15s ease;
+  }
+  .card-chevron.collapsed {
+    transform: rotate(-90deg);
+  }
+  .card-body {
+    display: contents;
+  }
+  .card-body.collapsed {
+    display: none;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    background: var(--color-canvas-inset);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-16);
+    transition: background var(--duration-fast), border-color var(--duration-fast);
+  }
+  .input-wrap:hover,
+  .input-wrap.is-active {
+    border-color: var(--color-ruby);
+    background: var(--color-ruby-tint);
+  }
+
+  .text-input {
+    height: var(--h-input);
+    padding: 0 var(--spacing-16);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-subtle);
+    background: var(--color-canvas-inset);
+    color: var(--color-foreground);
+    font: inherit;
+    width: 100%;
+    max-width: 320px;
+    transition: border-color var(--duration-fast), background var(--duration-fast);
+  }
+  .text-input::placeholder {
+    color: var(--color-foreground-subtle);
+  }
+  .text-input:focus-visible {
+    outline: 2px solid var(--color-ruby);
+    outline-offset: 2px;
+  }
+
+  /* App shell — bespoke layout classes (not part of the ported atom set),
+     composed with the tokens above the same way the source repo's own
+     page-level chrome is: hand-rolled structure, token-driven values. */
+  .app-header {
+    padding: var(--spacing-16) var(--spacing-24);
+    border-bottom: 1px solid var(--color-divider);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-16);
+  }
+  .app-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  @media (min-width: 768px) {
+    .app-main {
+      grid-template-columns: 340px 1fr;
+    }
+    .app-sidebar {
+      border-right: 1px solid var(--color-divider);
+    }
+  }
+  .app-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-16);
+    padding: var(--spacing-16);
+    overflow-y: auto;
+  }
+  .app-detail {
+    padding: var(--spacing-24);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-16);
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-8);
+    padding: var(--spacing-48) var(--spacing-16);
+    color: var(--color-foreground-muted);
+    text-align: center;
+    height: 100%;
+  }
+
+  .file-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    width: 100%;
+    padding: var(--spacing-8) var(--spacing-12);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--duration-fast);
+  }
+  .file-row:hover {
+    background: var(--color-canvas-inset);
+  }
+  .file-row[data-selected="true"] {
+    background: var(--color-ruby-tint);
+    border-color: var(--color-ruby-bg);
+  }
+  .file-row .file-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+  }
+  .file-row .file-remove {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-full);
+    color: var(--color-foreground-subtle);
+    background: transparent;
+  }
+  .file-row .file-remove:hover {
+    background: var(--color-gray-2);
+    color: var(--color-foreground);
+  }
+
+  .party-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-16);
+  }
+  @media (min-width: 640px) {
+    .party-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+  .breakdown-table th {
+    text-align: left;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-foreground-muted);
+    padding: var(--spacing-8) var(--spacing-12);
+    border-bottom: 1px solid var(--color-divider);
+    white-space: nowrap;
+  }
+  .breakdown-table td {
+    padding: var(--spacing-8) var(--spacing-12);
+    border-bottom: 1px solid var(--color-divider);
+    vertical-align: top;
+  }
+  .breakdown-table tr:last-child td {
+    border-bottom: none;
+  }
+  .breakdown-table td.num,
+  .breakdown-table th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .allowance-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-12);
+    padding: var(--spacing-8) 0;
+    border-bottom: 1px solid var(--color-divider);
+    font-size: var(--text-sm);
+  }
+  .allowance-row:last-child {
+    border-bottom: none;
+  }
+
+  .totals-cascade {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+  .totals-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: var(--text-sm);
+    padding: var(--spacing-4) 0;
+    color: var(--color-foreground-muted);
+  }
+  .totals-row .amount {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-foreground);
+  }
+  .totals-row.final {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-foreground);
+    border-top: 1px solid var(--color-divider);
+    padding-top: var(--spacing-8);
+    margin-top: var(--spacing-4);
+  }
+  .totals-row.final .amount {
+    color: var(--color-foreground);
+  }
+
+  .raw-xml pre {
+    background: var(--color-canvas-inset);
+    padding: var(--spacing-12);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 240px;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  .app-main {
+    display: block !important;
+  }
+  .app-detail {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .card {
+    background: white !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .card-body.collapsed {
+    display: contents;
+  }
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

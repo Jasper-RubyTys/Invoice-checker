@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="Blad1">
+  <Table ss:ExpandedColumnCount="2" ss:DefaultRowHeight="15">
+   <Row>
+    <Cell><Data ss:Type="String">Zomaar een notitie</Data></Cell>
+    <Cell><Data ss:Type="String">zonder kolomkoppen</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>
