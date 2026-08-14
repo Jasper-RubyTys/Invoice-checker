@@ -39,9 +39,25 @@ export function Card({
       {...props}
     >
       {(title || actions) && (
-        <div className="card-h">
+        <div
+          className={`card-h ${collapsible ? "card-h-collapsible" : ""}`.trim()}
+          onClick={collapsible ? toggle : undefined}
+          role={collapsible ? "button" : undefined}
+          tabIndex={collapsible ? 0 : undefined}
+          aria-expanded={collapsible ? !collapsed : undefined}
+          onKeyDown={
+            collapsible
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggle();
+                  }
+                }
+              : undefined
+          }
+        >
           {title && <h3>{title}</h3>}
-          <div className="card-h-actions">
+          <div className="card-h-actions" onClick={(e) => e.stopPropagation()}>
             {actions}
             {collapsible && (
               <button
