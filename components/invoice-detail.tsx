@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { Party, ParsedInvoice } from "@/lib/ubl-invoice";
-import { SpreadsheetInvoice, groupLinesByArticle, groupLinesByService } from "@/lib/spreadsheet-invoice";
+import {
+  SpreadsheetInvoice,
+  groupLinesByArticle,
+  groupLinesByService,
+  summarizeLinesWithoutArticleCode,
+} from "@/lib/spreadsheet-invoice";
 import { UploadedInvoice } from "@/lib/uploaded-invoice";
 import { formatCurrency, formatDate, formatPercent, formatQuantity } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -235,6 +240,7 @@ function SpreadsheetBreakdown({ fileName, invoice }: { fileName: string; invoice
     value === undefined ? "–" : formatCurrency(value, SPREADSHEET_CURRENCY);
   const subtotals = groupLinesByService(invoice.lines);
   const articleSubtotals = groupLinesByArticle(invoice.lines);
+  const uncodedSummary = summarizeLinesWithoutArticleCode(invoice.lines);
   const [articleFilter, setArticleFilter] = useState("");
   const filteredArticleSubtotals = useMemo(() => {
     const query = articleFilter.trim().toLowerCase();
@@ -305,9 +311,9 @@ function SpreadsheetBreakdown({ fileName, invoice }: { fileName: string; invoice
           value={articleFilter}
           onChange={(e) => setArticleFilter(e.target.value)}
         />
-        {articleSubtotals.length === 0 ? (
+        {articleSubtotals.length === 0 && !uncodedSummary ? (
           <p className="text-sm text-foreground-muted">Geen factuurregels met een artikelnr.</p>
-        ) : filteredArticleSubtotals.length === 0 ? (
+        ) : filteredArticleSubtotals.length === 0 && !uncodedSummary ? (
           <p className="text-sm text-foreground-muted">Geen artikel gevonden voor &quot;{articleFilter}&quot;.</p>
         ) : (
           <table className="breakdown-table">
@@ -328,6 +334,19 @@ function SpreadsheetBreakdown({ fileName, invoice }: { fileName: string; invoice
                   <td className="num">{money(subtotal.total)}</td>
                 </tr>
               ))}
+              {uncodedSummary && (
+                <>
+                  <tr className="divider-row">
+                    <td colSpan={4} />
+                  </tr>
+                  <tr>
+                    <td><b>Ontbrekend artikelnummer</b></td>
+                    <td><b>–</b></td>
+                    <td className="num">{uncodedSummary.count}</td>
+                    <td className="num">{money(uncodedSummary.total)}</td>
+                  </tr>
+                </>
+              )}
             </tbody>
           </table>
         )}

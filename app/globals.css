@@ -621,6 +621,11 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
+  .breakdown-table .divider-row td {
+    padding: var(--spacing-4) 0 0;
+    border-bottom: none;
+    border-top: 2px solid var(--color-border-strong);
+  }
 
   .allowance-row {
     display: flex;

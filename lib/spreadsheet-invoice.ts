@@ -53,6 +53,11 @@ export interface ArticleSubtotal {
   total: number;
 }
 
+export interface UncodedLinesSummary {
+  count: number;
+  total: number;
+}
+
 export type SpreadsheetParseResult =
   | { ok: true; invoice: SpreadsheetInvoice }
   | { ok: false; error: ParseError };
@@ -351,4 +356,16 @@ export function groupLinesByArticle(lines: SpreadsheetInvoiceLine[]): ArticleSub
   return Array.from(totals.entries())
     .map(([articleCode, { description, count, total }]) => ({ articleCode, description, count, total }))
     .sort((a, b) => b.total - a.total);
+}
+
+/** Combined count/total for the lines `groupLinesByArticle` excludes (no article
+ *  code), so that cost isn't silently dropped from the per-artikel overview.
+ *  Returns null when every line has an article code. */
+export function summarizeLinesWithoutArticleCode(lines: SpreadsheetInvoiceLine[]): UncodedLinesSummary | null {
+  const uncoded = lines.filter((line) => !line.articleCode);
+  if (uncoded.length === 0) return null;
+  return {
+    count: uncoded.length,
+    total: uncoded.reduce((sum, line) => sum + line.amount, 0),
+  };
 }
