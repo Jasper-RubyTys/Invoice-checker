@@ -17,9 +17,14 @@ import {
   PaymentMeans,
   TaxSubtotal,
 } from "./ubl-invoice";
+import { deriveTaxCategoryId } from "./invoice-totals";
 
 function el(doc: Document, ns: string, qualifiedName: string): Element {
   return doc.createElementNS(ns, qualifiedName);
+}
+
+function round2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 function textEl(doc: Document, ns: string, qualifiedName: string, value: string): Element {
@@ -130,9 +135,8 @@ function buildInvoiceLine(doc: Document, line: InvoiceLine, currencyCode: string
   item.appendChild(textEl(doc, NS_CBC, "cbc:Name", line.description));
   if (line.taxPercent !== undefined || line.taxCategoryId !== undefined) {
     const taxCategory = el(doc, NS_CAC, "cac:ClassifiedTaxCategory");
-    if (line.taxCategoryId !== undefined) {
-      taxCategory.appendChild(textEl(doc, NS_CBC, "cbc:ID", line.taxCategoryId));
-    }
+    const taxCategoryId = line.taxCategoryId ?? deriveTaxCategoryId(line.taxPercent);
+    taxCategory.appendChild(textEl(doc, NS_CBC, "cbc:ID", taxCategoryId));
     if (line.taxPercent !== undefined) {
       taxCategory.appendChild(textEl(doc, NS_CBC, "cbc:Percent", String(line.taxPercent)));
     }
@@ -249,6 +253,8 @@ export function buildUblInvoiceXml(invoice: ParsedInvoice): string {
 
   if (invoice.taxSubtotals.length > 0) {
     const taxTotal = el(doc, NS_CAC, "cac:TaxTotal");
+    const taxAmountTotal = round2(invoice.taxSubtotals.reduce((sum, t) => sum + t.taxAmount, 0));
+    taxTotal.appendChild(amountEl(doc, "cbc:TaxAmount", taxAmountTotal, invoice.currencyCode));
     for (const subtotal of invoice.taxSubtotals) {
       taxTotal.appendChild(buildTaxSubtotal(doc, subtotal, invoice.currencyCode));
     }

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { buildUblInvoiceXml } from "@/lib/build-ubl-invoice";
 import { formatCurrency } from "@/lib/format";
-import { computeTotals } from "@/lib/invoice-totals";
+import { computeTotals, taxRateLines, withInvoiceNumberNote } from "@/lib/invoice-totals";
 import { InvoiceLine, ParsedInvoice, Party } from "@/lib/ubl-invoice";
 
 interface InvoiceEditFormProps {
@@ -85,7 +85,9 @@ export function InvoiceEditForm({
     setInvoice((prev) => ({ ...prev, lines: prev.lines.filter((_, i) => i !== index) }));
 
   const download = () => {
-    const xml = buildUblInvoiceXml(finalInvoice);
+    const xml = buildUblInvoiceXml(
+      withInvoiceNumberNote({ ...finalInvoice, lines: taxRateLines(taxSubtotals) }),
+    );
     const blob = new Blob([xml], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

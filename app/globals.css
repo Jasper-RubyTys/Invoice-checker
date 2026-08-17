@@ -530,7 +530,7 @@
   }
   @media (min-width: 1024px) {
     .pdf-compare-layout {
-      grid-template-columns: minmax(0, 1fr) minmax(360px, 480px);
+      grid-template-columns: minmax(0, 1fr) minmax(480px, 640px);
     }
     .pdf-compare-preview {
       position: sticky;

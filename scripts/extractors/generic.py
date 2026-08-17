@@ -148,7 +148,11 @@ def extract_vat_number(text):
 
 
 def extract_kvk_number(text):
-    return _search(text, r"KvK[\s\-]?(?:nr\.?|nummer)?\s*[:\-]?\s*(\d{8})")
+    # The gap between the label and the number isn't always just
+    # "nr."/"nummer" -- some suppliers print the registering city in
+    # between (e.g. "KvK Zaandam 35012085"). Allow any short run of
+    # non-digit text on the same line rather than enumerating wordings.
+    return _search(text, r"KvK\b[^\d\n]{0,30}(\d{8})\b")
 
 
 def extract_iban(text):
@@ -161,15 +165,53 @@ def extract_currency(text):
     return None
 
 
+# Ruby Toys B.V. is always the buyer on these invoices, never the supplier
+# (see lib/config.ts's RUBY_TOYS_BUYER) -- it must never be picked as the
+# extracted supplier name, even though it often appears near the top of
+# page 1 (return address) and can itself carry a "B.V." suffix.
+_BUYER_NAME_RE = re.compile(r"ruby[\s\-]*toys", re.IGNORECASE)
+
+# A name immediately followed by a Dutch legal-entity suffix is a much
+# stronger signal than "doesn't look like a label": such a match essentially
+# never happens by coincidence. This is what lets us find the supplier's
+# name in a footer BTW/KvK/IBAN disclosure block when the letterhead itself
+# is a logo image with no extractable text above it (e.g. Albert Heijn).
+_LEGAL_SUFFIX_RE = re.compile(
+    r"((?:[A-Z][\w&.'\-]*\s+){0,4}[A-Z][\w&.'\-]*\s+(?:B\.?V\.?|N\.?V\.?|V\.?O\.?F\.?))(?=\s|$)"
+)
+
+
+def _find_legal_entity_name(text):
+    for match in _LEGAL_SUFFIX_RE.finditer(text):
+        candidate = match.group(1).strip()
+        if _BUYER_NAME_RE.search(candidate):
+            continue
+        return candidate
+    return None
+
+
 def extract_supplier_name(pages):
-    """Best-effort guess: the first non-blank line on page 1 that doesn't
-    look like a label, address, or postal code — invoice letterheads
-    conventionally put the sender's name at the top."""
+    """Best-effort guess, tried in order:
+    1. A name directly followed by a legal-entity suffix (B.V./N.V./V.O.F.)
+       anywhere on page 1 -- finds the name even when it only exists in a
+       footer disclosure block rather than at the top of the page.
+    2. Fallback: the first non-blank line on page 1 that doesn't look like
+       a label, address, or postal code — invoice letterheads
+       conventionally put the sender's name at the top.
+    """
     if not pages:
         return None
-    for raw_line in pages[0].get("text", "").splitlines():
+    page_text = pages[0].get("text", "")
+
+    legal_entity_name = _find_legal_entity_name(page_text)
+    if legal_entity_name:
+        return legal_entity_name
+
+    for raw_line in page_text.splitlines():
         candidate = raw_line.strip()
         if not candidate:
+            continue
+        if _BUYER_NAME_RE.search(candidate):
             continue
         if re.search(r"\d{4}\s?[A-Z]{2}\b", candidate):
             continue

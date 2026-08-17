@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildUblInvoiceXml } from "./build-ubl-invoice";
-import { parseUblInvoice, ParsedInvoice } from "./ubl-invoice";
+import { NS_CAC, NS_CBC, parseUblInvoice, ParsedInvoice } from "./ubl-invoice";
 
 const FULL_INVOICE: ParsedInvoice = {
   invoiceNumber: "INV-2026-0042",
@@ -111,5 +111,38 @@ describe("buildUblInvoiceXml", () => {
     if (!result.ok) return;
     expect(result.invoice.supplier.name).toBe("Q&A Trading <NL> B.V.");
     expect(result.invoice.lines[0].description).toBe('Kabels & connectoren "special" — café-editie');
+  });
+
+  it("derives a tax category from the rate when a line has no explicit taxCategoryId (PDF-converted invoices)", () => {
+    const invoice: ParsedInvoice = {
+      ...FULL_INVOICE,
+      lines: [
+        { ...FULL_INVOICE.lines[0], taxCategoryId: undefined, taxPercent: 21 },
+        { ...FULL_INVOICE.lines[1], taxCategoryId: undefined, taxPercent: 0 },
+      ],
+    };
+    const xml = buildUblInvoiceXml(invoice);
+    const result = parseUblInvoice(xml);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.invoice.lines[0].taxCategoryId).toBe("S");
+    expect(result.invoice.lines[1].taxCategoryId).toBe("Z");
+  });
+
+  it("writes the total VAT amount as cac:TaxTotal/cbc:TaxAmount, in currency, ahead of the per-rate subtotals", () => {
+    // Accounting software (e.g. Exact) reads this element for the invoice's
+    // total VAT; without it, the imported VAT amount silently defaults to 0.
+    const xml = buildUblInvoiceXml(FULL_INVOICE);
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    const taxTotal = Array.from(doc.documentElement.children).find(
+      (el) => el.namespaceURI === NS_CAC && el.localName === "TaxTotal",
+    );
+    expect(taxTotal).toBeDefined();
+
+    const firstChild = taxTotal?.firstElementChild;
+    expect(firstChild?.namespaceURI).toBe(NS_CBC);
+    expect(firstChild?.localName).toBe("TaxAmount");
+    expect(firstChild?.textContent).toBe("21.9");
+    expect(firstChild?.getAttribute("currencyID")).toBe("EUR");
   });
 });

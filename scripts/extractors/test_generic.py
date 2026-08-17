@@ -11,6 +11,9 @@ from generic import (
     extract,
     extract_invoice_number,
     extract_issue_date,
+    extract_kvk_number,
+    extract_supplier_name,
+    extract_vat_number,
 )
 
 # A real (anonymized) Albert Heijn grocery-delivery invoice. Its line items
@@ -18,6 +21,12 @@ from generic import (
 # finds nothing -- this is the exact shape that used to fall through to the
 # single "controleer en splits handmatig" placeholder line. Columns:
 # Btw / Exclusief btw / Btw-bedrag / Inclusief btw (no quantity/unit price).
+# The trailing footer block is the legally required BTW/KvK/IBAN disclosure
+# that Dutch invoices print at the very bottom: the letterhead itself is a
+# logo image with no extractable "Albert Heijn" text anywhere above it, so
+# this footer's name line is the ONLY place the supplier's name exists as
+# text at all. The KvK line also has a city name ("Zaandam") wedged between
+# the label and the number, not just "nr."/"nummer".
 AH_INVOICE_TEXT = """Factuur
 RUBY-TOYS B.V. Datum 17 augustus 2026
 Beemdstraat 23 Factuurnummer 9185432-00076
@@ -38,6 +47,9 @@ Specificatie
 Omschrijving Aantal Btw Exclusief btw Btw-bedrag Inclusief btw
 AH Avocado eetrijp 1 9% 2,74 0,25 2,99
 AH Extra lang lekker zaans witte bol 10st 4 9% 7,30 0,66 7,96
+Albert Heijn B.V. NL-BIO-01
+Provincialeweg 11 klantenservice BTW NL002230884B01 IBAN NL46INGB0702493368
+1506 MA ZAANDAM www.ah.nl/klantenservice KvK Zaandam 35012085 BIC INGBNL2A
 """
 
 # A real (anonymized) Vossepoel Group cleaning-services invoice. Different
@@ -138,6 +150,43 @@ class ExtractDatesTests(unittest.TestCase):
         self.assertEqual(_extract_header_row_dates("Geen tabel hier, alleen wat tekst."), {})
 
 
+class ExtractSupplierNameTests(unittest.TestCase):
+    def test_finds_the_name_in_a_footer_disclosure_block_not_the_page_top(self):
+        # The page top is all buyer address / invoice-metadata lines (and a
+        # "Totaal inclusief btw" line) -- none of those is the supplier.
+        # "Albert Heijn B.V." only exists as text in the BTW/KvK/IBAN
+        # footer at the very bottom of the page.
+        self.assertEqual(extract_supplier_name([{"text": AH_INVOICE_TEXT}]), "Albert Heijn B.V.")
+
+    def test_does_not_mistake_the_buyer_for_the_supplier(self):
+        # "RUBY-TOYS B.V." (the buyer) also matches the legal-suffix
+        # pattern and appears earlier in the text than the real supplier
+        # name -- it must be skipped, not returned.
+        name = extract_supplier_name([{"text": AH_INVOICE_TEXT}])
+        self.assertNotIn("RUBY", name.upper())
+
+    def test_falls_back_to_the_top_of_page_when_no_legal_suffix_is_found(self):
+        # Vossepoel Group's own name has no B.V./N.V. suffix anywhere, so
+        # this must still fall back to the original top-of-page heuristic.
+        self.assertEqual(extract_supplier_name([{"text": VOSSEPOEL_INVOICE_TEXT}]), "Vossepoel Group")
+
+
+class ExtractKvkNumberTests(unittest.TestCase):
+    def test_finds_the_number_with_a_place_name_between_label_and_digits(self):
+        # Real formatting: "KvK Zaandam 35012085" -- a city name sits
+        # between the label and the number, not just "nr."/"nummer".
+        self.assertEqual(extract_kvk_number(AH_INVOICE_TEXT), "35012085")
+
+    def test_still_finds_the_number_with_the_original_nr_nummer_wording(self):
+        self.assertEqual(extract_kvk_number("KvK-nummer: 12345678"), "12345678")
+        self.assertEqual(extract_kvk_number("KvK nr. 87654321"), "87654321")
+
+
+class ExtractVatNumberTests(unittest.TestCase):
+    def test_finds_the_number_in_the_footer_disclosure_block(self):
+        self.assertEqual(extract_vat_number(AH_INVOICE_TEXT), "NL002230884B01")
+
+
 class ExtractTests(unittest.TestCase):
     def test_falls_back_to_the_text_table_when_no_pdfplumber_table_is_detected(self):
         doc = {"pages": [{"text": AH_INVOICE_TEXT, "tables": []}]}
@@ -155,6 +204,13 @@ class ExtractTests(unittest.TestCase):
         invoice = extract(doc)
         self.assertEqual(len(invoice["lines"]), 1)
         self.assertIn("splits handmatig", invoice["lines"][0]["description"])
+
+    def test_fills_in_the_supplier_block_for_a_footer_only_letterhead(self):
+        doc = {"pages": [{"text": AH_INVOICE_TEXT, "tables": []}]}
+        invoice = extract(doc)
+        self.assertEqual(invoice["supplier"]["name"], "Albert Heijn B.V.")
+        self.assertEqual(invoice["supplier"]["companyId"], "35012085")
+        self.assertEqual(invoice["supplier"]["vatNumber"], "NL002230884B01")
 
 
 if __name__ == "__main__":
