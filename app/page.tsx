@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { InvoiceDropzone } from "@/components/invoice-dropzone";
 import { InvoiceList } from "@/components/invoice-list";
@@ -33,7 +34,10 @@ export default function Home() {
         <div>
           <h1 className="text-lg font-semibold">Factuur Checker</h1>
           <p className="text-sm text-foreground-muted">
-            Vertaalt XML-facturen (UBL/Peppol) naar een leesbaar overzicht — niets verlaat je browser.
+            Vertaalt XML-facturen (UBL/Peppol) naar een leesbaar overzicht — niets verlaat je browser.{" "}
+            <Link href="/pdf-invoice" className="underline">
+              Heb je een PDF-factuur? Zet hem hier om →
+            </Link>
           </p>
         </div>
         <ThemeToggle />

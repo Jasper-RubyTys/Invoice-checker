@@ -4,9 +4,17 @@ import { DragEvent, useCallback, useRef, useState } from "react";
 
 interface InvoiceDropzoneProps {
   onFiles: (files: File[]) => void;
+  accept?: string;
+  title?: string;
+  hint?: string;
 }
 
-export function InvoiceDropzone({ onFiles }: InvoiceDropzoneProps) {
+export function InvoiceDropzone({
+  onFiles,
+  accept = ".xml,text/xml,application/xml",
+  title = "Sleep XML-facturen hierheen, of klik om te kiezen",
+  hint = "Meerdere UBL/Peppol .xml-bestanden tegelijk toegestaan",
+}: InvoiceDropzoneProps) {
   const [isActive, setIsActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -43,16 +51,12 @@ export function InvoiceDropzone({ onFiles }: InvoiceDropzoneProps) {
         }
       }}
     >
-      <p className="text-sm font-medium text-foreground">
-        Sleep XML-facturen hierheen, of klik om te kiezen
-      </p>
-      <p className="text-xs text-foreground-muted">
-        Meerdere UBL/Peppol .xml-bestanden tegelijk toegestaan
-      </p>
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="text-xs text-foreground-muted">{hint}</p>
       <input
         ref={inputRef}
         type="file"
-        accept=".xml,text/xml,application/xml"
+        accept={accept}
         multiple
         className="hidden"
         onChange={(event) => {

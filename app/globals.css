@@ -522,6 +522,39 @@
     gap: var(--spacing-16);
   }
 
+  .pdf-compare-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-16);
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .pdf-compare-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 480px);
+    }
+    .pdf-compare-preview {
+      position: sticky;
+      top: var(--spacing-16);
+      height: calc(100vh - var(--spacing-48));
+    }
+  }
+  .pdf-compare-preview {
+    display: flex;
+    height: 70vh;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-canvas-raised);
+  }
+  .pdf-compare-preview iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .pdf-compare-preview p {
+    margin: auto;
+  }
+
   .empty-state {
     display: flex;
     flex-direction: column;

@@ -9,8 +9,8 @@
 import { ParseError } from "./parse-error";
 
 export const NS_INVOICE = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2";
-const NS_CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
-const NS_CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
+export const NS_CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
+export const NS_CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
 
 export interface Address {
   street?: string;

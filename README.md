@@ -4,7 +4,7 @@ A small internal tool for translating machine-unreadable supplier invoices into 
 
 ## Status: v1
 
-v1 is a **stateless translator**. There is no database, no login, no server-side processing, and nothing is saved between page reloads — that's intentional and deferred to a later version (see [Roadmap](#roadmap)).
+v1 is mainly a **stateless translator**. There is no database, no login, and nothing is saved between page reloads — that's intentional and deferred to a later version (see [Roadmap](#roadmap)). The one deliberate exception is the PDF-to-UBL converter described below, which does use a local server step.
 
 What it does today:
 
@@ -17,7 +17,19 @@ What it does today:
   | Excel "SpreadsheetML" workbook export | `Workbook` (`urn:schemas-microsoft-com:office:spreadsheet`) | Header metadata (invoice #, date, debtor #), line items, **cost subtotals grouped by service type**, single grand total — see [note below](#about-the-spreadsheet-format) |
 - A per-file **error view** (wrong file type, malformed XML, unsupported document type, missing required fields) so one bad file in a batch never breaks the others — with a "show raw XML" disclosure for debugging.
 - A **print / PDF** button (browser print, no PDF library) for handing a breakdown to someone who wants paper or a saved file.
+- A separate **PDF-to-UBL converter** (`/pdf-invoice`) for suppliers that only send PDF invoices — see [below](#pdf-to-ubl-converter).
 - Visual design ported from the internal `ruby-crm` design system (RT-CRM-HS: "Sunset · Coral" tokens, light + dark mode).
+
+### PDF-to-UBL converter
+
+Some suppliers only send PDF invoices, which the accounting software can't import directly (it accepts UBL XML). `/pdf-invoice` closes that gap:
+
+1. Upload a digitally-generated PDF invoice (no OCR — it needs a real text layer, not a scanned image).
+2. A local Python script (`scripts/extract_invoice.py`, using `pdfplumber`) extracts what it can find: invoice number, dates, supplier identity, IBAN, and line items from any detected table. This is the **one place in the app where invoice data is sent to a server** — a deliberate, scoped exception to the client-side design below, needed because there's no reliable in-browser PDF text/table extraction.
+3. Fields the extractor couldn't find are defaulted and flagged with a **"Controleer"** chip in a review form — nothing is silently guessed. The buyer is always Ruby Toys B.V. (never extracted), and totals/VAT are **computed from the line items** you confirm, not read off the PDF's printed total, since that's the least reliable thing to regex out of an arbitrary layout.
+4. Once you're happy with the fields, "Download UBL XML" builds the file **client-side** (`lib/build-ubl-invoice.ts`, mirroring how `lib/ubl-invoice.ts` reads UBL) for import into the accounting software.
+
+There are no supplier-specific extraction modules yet — `scripts/extractors/` is a generic, heuristic extractor plus an empty registry (`scripts/extractors/__init__.py`) ready for one once a recurring PDF-only supplier is identified. See [Python setup](#python-setup-pdf-converter) to run this locally, and [`docs/pdf-invoice-converter/functions.md`](docs/pdf-invoice-converter/functions.md) for a function-by-function reference of every file involved.
 
 ### Explicitly out of scope for v1
 
@@ -34,12 +46,15 @@ One real supplier's invoices turned out to be a legacy **Excel "SpreadsheetML"**
 
 ## Architecture
 
-- **Next.js (App Router) + TypeScript + Tailwind v4**, no backend — everything in `app/page.tsx` is a client component holding an in-memory list of uploaded files.
+- **Next.js (App Router) + TypeScript + Tailwind v4**, no backend for the XML/spreadsheet flow — everything in `app/page.tsx` is a client component holding an in-memory list of uploaded files. The PDF converter (`app/pdf-invoice/page.tsx`) is the one exception; see below.
 - **`lib/parse-invoice-file.ts`** — sniffs each file's XML root element and dispatches to the matching parser. Adding a third format later means adding a parser module and one case here, not touching the UI.
 - **`lib/ubl-invoice.ts`** / **`lib/spreadsheet-invoice.ts`** — pure, framework-free parser modules (`parseUblInvoice` / `parseSpreadsheetInvoice`), each returning a typed `{ ok: true, invoice }` or `{ ok: false, error }` result. Never throw — every failure path is a typed `ParseError` (`lib/parse-error.ts`), so one bad file can't crash a batch.
+- **`lib/build-ubl-invoice.ts`** — the mirror image of `lib/ubl-invoice.ts`: serializes a `ParsedInvoice` back into UBL XML (`buildUblInvoiceXml`), client-side via `DOMParser`/`XMLSerializer`. Used by the PDF converter to produce its downloadable XML.
+- **`lib/invoice-totals.ts`** — derives the totals cascade and per-rate VAT subtotals from a set of line items (`computeTotals`), instead of trusting a total read from a source document. Used for PDF-originated invoices, where line items can be read with reasonable confidence but a printed "Totaal" figure can't.
 - **`lib/uploaded-invoice.ts`** — turns a raw `File` into an `UploadedInvoice` (reads it, checks extension/size, calls the dispatcher).
 - **`lib/format.ts`** — currency/date/percent formatting, keyed to each invoice's own currency (never hardcoded to EUR, except for the spreadsheet format which genuinely never declares one).
-- **`components/invoice-dropzone.tsx`**, **`invoice-list.tsx`**, **`invoice-detail.tsx`** — upload UI, per-file status list, and the format-specific breakdown views.
+- **`components/invoice-dropzone.tsx`**, **`invoice-list.tsx`**, **`invoice-detail.tsx`** — upload UI, per-file status list, and the format-specific breakdown views. `invoice-detail.tsx`'s `InvoiceDetail`/`Breakdown` is reused unchanged for the PDF converter's live preview.
+- **`components/invoice-edit-form.tsx`** — the PDF converter's review/correction form (see [below](#pdf-to-ubl-converter)).
 - **`components/ui/`** — thin local `Button` / `Card` / `Chip` atoms over CSS classes ported into `app/globals.css`.
 - **`app/globals.css`** — design tokens and component CSS ported (not imported — the source is a separate, non-published monorepo package) from `ruby-crm`'s `@ruby-crm/ui`, adapted for Tailwind v4's `@theme`.
 
@@ -48,7 +63,27 @@ One real supplier's invoices turned out to be a legacy **Excel "SpreadsheetML"**
 XML parsing happens with the browser's native `DOMParser`, not a server-side library. Two reasons, both load-bearing:
 
 1. **Security** — this supplier isn't fully trusted, and a naive server-side XML parser resolving external entities/DTDs is a classic XXE attack surface. Browsers don't resolve external entities in `DOMParser`, so this class of vulnerability is avoided by construction, not by configuration.
-2. **Privacy** — invoice content never leaves the browser in v1. There's no upload endpoint to secure and no server-side log that could retain financial data.
+2. **Privacy** — invoice content never leaves the browser for the XML/spreadsheet flow. There's no upload endpoint to secure and no server-side log that could retain financial data. The PDF converter is a deliberate, scoped exception — see [PDF-to-UBL converter](#pdf-to-ubl-converter) — because there's no equivalent in-browser way to extract text/tables from a PDF.
+
+### PDF converter architecture
+
+- **`app/api/extract-pdf/route.ts`** — the only server route in this project. Accepts a PDF upload, validates it, and calls `runPdfExtractor`.
+- **`lib/server/run-pdf-extractor.ts`** — server-only (never import from a `"use client"` file). Spawns the Python script, pipes the PDF bytes over stdin, reads JSON from stdout, and maps the result to a `ParsedInvoice` — filling in defaults, the fixed Ruby Toys buyer identity (`lib/config.ts`), and computed totals (`lib/invoice-totals.ts`) — plus a list of fields the extractor couldn't find (`uncertainFields`), used to flag them in the review form. Every failure path (Python missing, a timeout, a non-zero exit, malformed JSON) resolves to a typed error and is logged server-side; nothing throws.
+- **`scripts/extract_invoice.py`** — CLI entry point: reads PDF bytes from stdin, uses `pdfplumber` to extract per-page text and tables, and prints one JSON line to stdout.
+- **`scripts/extractors/generic.py`** — the supplier-agnostic heuristic extractor: regex/label matching for Dutch invoice fields (factuurnummer, datums, BTW/KvK-nummer, IBAN) plus table-based line-item detection, with a single-line fallback so the review form is never empty.
+- **`scripts/extractors/__init__.py`** — `resolve(hint)`, the extension point for a future supplier-specific extractor module. Empty (`SUPPLIER_EXTRACTORS = {}`) until a recurring PDF-only supplier is identified and there's a real sample to build against.
+
+### Python setup (PDF converter)
+
+The PDF converter needs a local Python 3 with `pdfplumber` installed:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r scripts/requirements.txt
+```
+
+`npm run dev` spawns `python3` by default; set `PYTHON_BIN` (e.g. to `.venv/bin/python3`) if that's not the interpreter with `pdfplumber` installed. The XML/spreadsheet flow on `/` needs no Python at all.
 
 ## Getting started
 
@@ -60,7 +95,7 @@ npm run lint
 npm run test      # vitest — parser + dispatcher unit tests, fixture-driven
 ```
 
-Test fixtures live in `lib/fixtures/` (valid and deliberately-broken examples for both formats) and are read directly by the `*.test.ts` files next to each parser module.
+Test fixtures live in `lib/fixtures/` (valid and deliberately-broken examples for both formats) and are read directly by the `*.test.ts` files next to each parser module. The Python extractor has no automated test suite yet (see [Roadmap](#roadmap)) — smoke-test it directly with `python3 scripts/extract_invoice.py < some-invoice.pdf`.
 
 ## Roadmap
 
@@ -69,3 +104,5 @@ Ideas for a v2, not yet built:
 - **Database + logger**, so multiple invoices across multiple months can be browsed as an overview instead of one-at-a-time in a single session (the original motivation for this project).
 - **Anomaly flagging** (e.g. totals that don't reconcile with their own line items, unusual tax rates, unexpected document-level charges) — deliberately deferred out of v1 so the readability layer could be validated against real invoices first.
 - **More formats** as new suppliers turn out to use something other than UBL or this spreadsheet export.
+- **Supplier-specific PDF extractor modules** once a recurring PDF-only supplier is identified — see `scripts/extractors/__init__.py`.
+- **Python test tooling** (`pytest`) for the PDF extractor, currently validated by manual smoke-testing only.

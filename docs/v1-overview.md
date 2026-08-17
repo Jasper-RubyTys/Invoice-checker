@@ -34,9 +34,19 @@ These are decisions, not gaps — each one was a conscious call about where to d
 - **No fraud or anomaly detection.** The app shows exactly what a file declares — it doesn't check whether the numbers actually add up, flag unusual tax rates, or otherwise second-guess the supplier. It's a translator, not an auditor. (This was an explicit choice, so that the translation itself could be validated against real invoices before adding any judgment on top of it.)
 - **No supplier name for the spreadsheet-format invoices**, because that data genuinely isn't in the file — the real Excel version presumably shows it as a logo image, which doesn't survive the flat XML export. Rather than guess or hardcode a name, the app just doesn't show one.
 
+## PDF-to-UBL converter
+
+A second, related problem: some suppliers don't send XML at all — they only send PDF invoices, which the accounting software can't import (it only accepts UBL XML). Those invoices had to be typed in by hand.
+
+`/pdf-invoice` addresses this with a Python-based extractor (`scripts/extract_invoice.py`, `pdfplumber`) that reads a digitally-generated PDF's text and tables, plus a review form where a human confirms or corrects whatever was found before a UBL XML file is generated for import. This is the one place in the app where invoice data is sent to a server — a deliberate, scoped exception to the "everything stays in the browser" principle above, made because there's no equivalent in-browser way to extract structured data from a PDF. Two design choices keep the risk of bad data low despite that: the buyer is never extracted (it's always Ruby Toys B.V.), and totals/VAT are computed from the confirmed line items rather than read off the PDF's own printed total — the same "translator, not auditor" caution as the rest of v1, applied to a less structured input.
+
+There are no supplier-specific extraction modules yet, only a generic heuristic extractor and an extension point (`scripts/extractors/__init__.py`) for adding one once a recurring PDF-only supplier is identified.
+
+For a function-by-function reference of every file in this feature (Python extraction, the Node/TS server glue, and the React review form), see [`docs/pdf-invoice-converter/functions.md`](pdf-invoice-converter/functions.md).
+
 ## What's next
 
-The natural next step is the one already flagged when this project started: a **database and logger**, so instead of looking at one invoice at a time in a browser tab, finance could see an overview across many invoices and many months — spotting patterns, not just reading single files. Anomaly/fraud flagging (comparing an invoice's line items against its own totals, watching for unusual charges) is a reasonable follow-up once there's a history of real invoices to calibrate against.
+The natural next step is the one already flagged when this project started: a **database and logger**, so instead of looking at one invoice at a time in a browser tab, finance could see an overview across many invoices and many months — spotting patterns, not just reading single files. Anomaly/fraud flagging (comparing an invoice's line items against its own totals, watching for unusual charges) is a reasonable follow-up once there's a history of real invoices to calibrate against. On the PDF-converter side, the natural next steps are a supplier-specific extractor for whichever PDF-only supplier turns out to be the most frequent, and a proper Python test suite once there are enough real (redacted) sample invoices to build fixtures from.
 
 ## Where to look in the code
 
