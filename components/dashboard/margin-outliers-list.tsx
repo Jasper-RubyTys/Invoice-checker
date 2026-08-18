@@ -2,9 +2,14 @@ import { Chip } from "@/components/ui/chip";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { MarginOutlier } from "@/lib/dashboard-data";
 
-function toneForDeviation(deviationPercent: number): "red" | "orange" | "yellow" {
+/**
+ * A margin below expectation is a worse outcome than one above it, so it
+ * never reads as milder — "orange" (warning) beats the "blue" (info) given
+ * to a merely-above-expected margin, at the same deviation magnitude.
+ */
+function toneForDeviation(deviationPercent: number): "red" | "orange" | "blue" {
   if (Math.abs(deviationPercent) >= 20) return "red";
-  return deviationPercent > 0 ? "orange" : "yellow";
+  return deviationPercent < 0 ? "orange" : "blue";
 }
 
 export function MarginOutliersList({ outliers }: { outliers: MarginOutlier[] }) {

@@ -12,5 +12,5 @@ const LABELS: Record<DashboardData["source"], string> = {
  * docs/v2-overview.md.
  */
 export function DataSourceBadge({ source }: { source: DashboardData["source"] }) {
-  return <Chip tone={source === "mock" ? "gray" : "green"}>{LABELS[source]}</Chip>;
+  return <Chip tone={source === "mock" ? "yellow" : "green"}>{LABELS[source]}</Chip>;
 }

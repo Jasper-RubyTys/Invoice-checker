@@ -1,58 +1,39 @@
-"use client";
+import { DataSourceBadge } from "@/components/dashboard/data-source-badge";
+import { MarginOutliersList } from "@/components/dashboard/margin-outliers-list";
+import { RevenueTrendChart } from "@/components/dashboard/revenue-trend-chart";
+import { SummaryStatTiles } from "@/components/dashboard/summary-stat-tiles";
+import { TopSuppliersTable } from "@/components/dashboard/top-suppliers-table";
+import { Card } from "@/components/ui/card";
+import { getDashboardData } from "@/lib/dashboard-data";
 
-import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
-import { InvoiceDropzone } from "@/components/invoice-dropzone";
-import { InvoiceList } from "@/components/invoice-list";
-import { InvoiceDetail } from "@/components/invoice-detail";
-import { loadUploadedInvoice, UploadedInvoice } from "@/lib/uploaded-invoice";
-
-export default function Home() {
-  const [files, setFiles] = useState<UploadedInvoice[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const handleFiles = useCallback(async (newFiles: File[]) => {
-    const loaded = await Promise.all(newFiles.map((file) => loadUploadedInvoice(file)));
-    setFiles((prev) => [...prev, ...loaded]);
-    setSelectedId((current) => current ?? loaded[0]?.id ?? null);
-  }, []);
-
-  const handleRemove = useCallback((id: string) => {
-    setFiles((prev) => prev.filter((file) => file.id !== id));
-    setSelectedId((current) => (current === id ? null : current));
-  }, []);
-
-  const selected = useMemo(
-    () => files.find((file) => file.id === selectedId) ?? null,
-    [files, selectedId],
-  );
+export default async function DashboardPage() {
+  const data = await getDashboardData();
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas-page text-foreground">
       <div className="app-page-intro no-print">
-        <h1 className="text-lg font-semibold">Factuur Checker</h1>
-        <p className="text-sm text-foreground-muted">
-          Vertaalt XML-facturen (UBL/Peppol) naar een leesbaar overzicht — niets verlaat je browser.{" "}
-          <Link href="/pdf-invoice" className="underline">
-            Heb je een PDF-factuur? Zet hem hier om →
-          </Link>
-        </p>
+        <div className="flex items-center gap-8">
+          <h1 className="text-lg font-semibold">Dashboard</h1>
+          <DataSourceBadge source={data.source} />
+        </div>
       </div>
 
-      <main className="app-main">
-        <aside className="app-sidebar no-print">
-          <InvoiceDropzone onFiles={handleFiles} />
-          <InvoiceList
-            files={files}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onRemove={handleRemove}
-          />
-        </aside>
+      <main className="app-detail flex-1">
+        <SummaryStatTiles summary={data.summary} />
 
-        <section className="app-detail print-area">
-          <InvoiceDetail uploaded={selected} />
-        </section>
+        <Card title={`Omzet per maand (${data.summary.periodLabel})`}>
+          <RevenueTrendChart data={data.revenueByMonth} currencyCode={data.summary.currencyCode} />
+        </Card>
+
+        <div className="dashboard-grid">
+          <Card title="Top leveranciers (op besteed bedrag)">
+            <TopSuppliersTable suppliers={data.topSuppliers} />
+          </Card>
+
+          <Card title="Marge-uitschieters">
+            <MarginOutliersList outliers={data.marginOutliers} />
+          </Card>
+        </div>
       </main>
     </div>
   );

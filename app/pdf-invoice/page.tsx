@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InvoiceDropzone } from "@/components/invoice-dropzone";
 import { InvoiceEditForm } from "@/components/invoice-edit-form";
@@ -90,13 +89,7 @@ export default function PdfInvoicePage() {
   return (
     <div className="flex min-h-screen flex-col bg-canvas-page text-foreground">
       <div className="app-page-intro no-print">
-        <h1 className="text-lg font-semibold">PDF-factuur → UBL XML</h1>
-        <p className="text-sm text-foreground-muted">
-          Zet een PDF-factuur om naar een UBL XML-bestand voor het boekhoudprogramma.{" "}
-          <Link href="/" className="underline">
-            Terug naar de XML-viewer
-          </Link>
-        </p>
+        <h1 className="text-lg font-semibold">PDF Converter</h1>
       </div>
 
       <main className="app-detail flex-1">

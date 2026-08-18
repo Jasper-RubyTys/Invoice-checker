@@ -34,7 +34,7 @@ These are decisions, not gaps — each one was a conscious call about where to d
 - **No fraud or anomaly detection.** The app shows exactly what a file declares — it doesn't check whether the numbers actually add up, flag unusual tax rates, or otherwise second-guess the supplier. It's a translator, not an auditor. (This was an explicit choice, so that the translation itself could be validated against real invoices before adding any judgment on top of it.)
 - **No supplier name for the spreadsheet-format invoices**, because that data genuinely isn't in the file — the real Excel version presumably shows it as a logo image, which doesn't survive the flat XML export. Rather than guess or hardcode a name, the app just doesn't show one.
 
-## PDF-to-UBL converter
+## PDF Converter
 
 A second, related problem: some suppliers don't send XML at all — they only send PDF invoices, which the accounting software can't import (it only accepts UBL XML). Those invoices had to be typed in by hand.
 

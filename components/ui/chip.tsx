@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react";
 
-type Tone = "gray" | "green" | "yellow" | "orange" | "red" | "teal" | "ruby";
+type Tone = "gray" | "green" | "yellow" | "orange" | "red" | "teal" | "blue" | "ruby";
 
 interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
   tone?: Tone;

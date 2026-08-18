@@ -4,7 +4,7 @@ A small internal tool for translating machine-unreadable supplier invoices into 
 
 ## Status: v1
 
-v1 is mainly a **stateless translator**. There is no database, no login, and nothing is saved between page reloads — that's intentional and deferred to a later version (see [Roadmap](#roadmap)). The one deliberate exception is the PDF-to-UBL converter described below, which does use a local server step.
+v1 is mainly a **stateless translator**. There is no database, no login, and nothing is saved between page reloads — that's intentional and deferred to a later version (see [Roadmap](#roadmap)). The one deliberate exception is the PDF Converter described below, which does use a local server step.
 
 What it does today:
 
@@ -17,10 +17,10 @@ What it does today:
   | Excel "SpreadsheetML" workbook export | `Workbook` (`urn:schemas-microsoft-com:office:spreadsheet`) | Header metadata (invoice #, date, debtor #), line items, **cost subtotals grouped by service type**, single grand total — see [note below](#about-the-spreadsheet-format) |
 - A per-file **error view** (wrong file type, malformed XML, unsupported document type, missing required fields) so one bad file in a batch never breaks the others — with a "show raw XML" disclosure for debugging.
 - A **print / PDF** button (browser print, no PDF library) for handing a breakdown to someone who wants paper or a saved file.
-- A separate **PDF-to-UBL converter** (`/pdf-invoice`) for suppliers that only send PDF invoices — see [below](#pdf-to-ubl-converter).
+- A separate **PDF Converter** (`/pdf-invoice`) for suppliers that only send PDF invoices — see [below](#pdf-converter).
 - Visual design ported from the internal `ruby-crm` design system (RT-CRM-HS: "Sunset · Coral" tokens, light + dark mode).
 
-### PDF-to-UBL converter
+### PDF Converter
 
 Some suppliers only send PDF invoices, which the accounting software can't import directly (it accepts UBL XML). `/pdf-invoice` closes that gap:
 
@@ -46,15 +46,20 @@ One real supplier's invoices turned out to be a legacy **Excel "SpreadsheetML"**
 
 ## Status: v2 (first draft)
 
-A `/dashboard` route now exists — a first, front-end-only draft toward a fuller finance app (revenue, margins, top suppliers), meant to start a scoping conversation with finance rather than to be a finished feature. **Every number on it is fictional sample data**, clearly labeled as such on the page itself; there is no Exact Online connection yet. See [`docs/v2-overview.md`](docs/v2-overview.md) for what was built and why, and [`docs/dashboard/exact-online-integration.md`](docs/dashboard/exact-online-integration.md) for the (also not-yet-built) plan to replace the mock data with a real Exact Online feed.
+A dashboard now exists at the app's index route (`/`) — a first, front-end-only draft toward a fuller finance app (revenue, margins, top suppliers), meant to start a scoping conversation with finance rather than to be a finished feature. **Every number on it is fictional sample data**, clearly labeled as such on the page itself; there is no Exact Online connection yet. See [`docs/v2-overview.md`](docs/v2-overview.md) for what was built and why (including how the route layout has moved on since that draft), and [`docs/dashboard/exact-online-integration.md`](docs/dashboard/exact-online-integration.md) for the (also not-yet-built) plan to replace the mock data with a real Exact Online feed.
 
-A shared navigation bar (`components/nav/main-nav.tsx`, rendered from `app/layout.tsx`) was introduced alongside this, replacing the per-page headers `/` and `/pdf-invoice` used to each render on their own.
+Making room for the dashboard at `/` moved the original XML/spreadsheet checker to `/checker` ("XML Checker" in the nav). A shared navigation bar (`components/nav/main-nav.tsx`, rendered from `app/layout.tsx`) links all four routes — `/` (Dashboard), `/checker` (XML Checker), `/pdf-invoice` (PDF Converter), `/vraagposten` (Vraagposten) — and each page's own intro below the nav is now a single title line, with descriptive copy and cross-links dropped in favor of the shared nav.
+
+## Status: Vraagposten (first draft)
+
+A new `/vraagposten` route lets Directie answer open Exact Online "Vraagposten" (unbooked depreciation entries) with a note, a receipt image, and/or an invoice PDF, and lets finance see those answers to book the entry correctly. **This is a mock/placeholder first draft**: the Vraagposten list is fictional sample data, and submitted answers live only in browser memory — nothing is persisted, and a page reload clears them. There is also no real login: a role switcher next to the theme toggle lets anyone flip between the "Finance" and "Directie" view, with no actual access control behind it. See [`docs/vraagposten-overview.md`](docs/vraagposten-overview.md) for the full write-up.
 
 ## Architecture
 
-- **Next.js (App Router) + TypeScript + Tailwind v4**, no backend for the XML/spreadsheet flow — everything in `app/page.tsx` is a client component holding an in-memory list of uploaded files. The PDF converter (`app/pdf-invoice/page.tsx`) is the one exception; see below.
-- **`components/nav/main-nav.tsx`** — the shared navigation bar rendered once from `app/layout.tsx`, linking `/`, `/pdf-invoice`, and `/dashboard` and hosting the theme toggle. Each page keeps its own short intro text below the nav, but no longer its own header/theme-toggle markup.
-- **`app/dashboard/page.tsx`** — the v2 dashboard first draft, an async Server Component reading from `lib/dashboard-data.ts`'s `getDashboardData()` (currently mock data only — see [`docs/v2-overview.md`](docs/v2-overview.md)). Aggregation logic (ranking suppliers, computing margin outliers) lives separately in `lib/dashboard-aggregations.ts`, unit-tested independently of the mock fixture.
+- **Next.js (App Router) + TypeScript + Tailwind v4**, no backend for the XML/spreadsheet flow — everything in `app/checker/page.tsx` (the XML Checker page) is a client component holding an in-memory list of uploaded files. The PDF Converter (`app/pdf-invoice/page.tsx`) is the one exception; see below.
+- **`components/nav/main-nav.tsx`** — the shared navigation bar rendered once from `app/layout.tsx`, linking `/` (Dashboard), `/checker` (XML Checker), `/pdf-invoice` (PDF Converter), and `/vraagposten` (Vraagposten), and hosting the role switcher and theme toggle. Each page keeps a one-line title below the nav, but no longer its own header/theme-toggle markup or descriptive copy.
+- **`app/page.tsx`** — the v2 dashboard, now the app's index route, an async Server Component reading from `lib/dashboard-data.ts`'s `getDashboardData()` (currently mock data only — see [`docs/v2-overview.md`](docs/v2-overview.md)). Aggregation logic (ranking suppliers, computing margin outliers) lives separately in `lib/dashboard-aggregations.ts`, unit-tested independently of the mock fixture.
+- **`app/vraagposten/page.tsx`** — the Vraagposten first draft, reading from `lib/vraagpost-data.ts`'s `getVraagposten()` (mock data only — see [`docs/vraagposten-overview.md`](docs/vraagposten-overview.md)). Unlike the dashboard, submitted answers are mutable client state (`components/vraagposten/vraagposten-page.tsx`), since Directie and finance must see the same in-memory answers within one session. `lib/role.ts` / `lib/use-role.ts` provide the Finance/Directie view switch, mirroring `lib/theme.ts` / `lib/use-theme.ts`.
 - **`lib/parse-invoice-file.ts`** — sniffs each file's XML root element and dispatches to the matching parser. Adding a third format later means adding a parser module and one case here, not touching the UI.
 - **`lib/ubl-invoice.ts`** / **`lib/spreadsheet-invoice.ts`** — pure, framework-free parser modules (`parseUblInvoice` / `parseSpreadsheetInvoice`), each returning a typed `{ ok: true, invoice }` or `{ ok: false, error }` result. Never throw — every failure path is a typed `ParseError` (`lib/parse-error.ts`), so one bad file can't crash a batch.
 - **`lib/build-ubl-invoice.ts`** — the mirror image of `lib/ubl-invoice.ts`: serializes a `ParsedInvoice` back into UBL XML (`buildUblInvoiceXml`), client-side via `DOMParser`/`XMLSerializer`. Used by the PDF converter to produce its downloadable XML.
@@ -62,7 +67,7 @@ A shared navigation bar (`components/nav/main-nav.tsx`, rendered from `app/layou
 - **`lib/uploaded-invoice.ts`** — turns a raw `File` into an `UploadedInvoice` (reads it, checks extension/size, calls the dispatcher).
 - **`lib/format.ts`** — currency/date/percent formatting, keyed to each invoice's own currency (never hardcoded to EUR, except for the spreadsheet format which genuinely never declares one).
 - **`components/invoice-dropzone.tsx`**, **`invoice-list.tsx`**, **`invoice-detail.tsx`** — upload UI, per-file status list, and the format-specific breakdown views. `invoice-detail.tsx`'s `InvoiceDetail`/`Breakdown` is reused unchanged for the PDF converter's live preview.
-- **`components/invoice-edit-form.tsx`** — the PDF converter's review/correction form (see [below](#pdf-to-ubl-converter)).
+- **`components/invoice-edit-form.tsx`** — the PDF Converter's review/correction form (see [below](#pdf-converter)).
 - **`components/ui/`** — thin local `Button` / `Card` / `Chip` atoms over CSS classes ported into `app/globals.css`.
 - **`app/globals.css`** — design tokens and component CSS ported (not imported — the source is a separate, non-published monorepo package) from `ruby-crm`'s `@ruby-crm/ui`, adapted for Tailwind v4's `@theme`.
 
@@ -71,7 +76,7 @@ A shared navigation bar (`components/nav/main-nav.tsx`, rendered from `app/layou
 XML parsing happens with the browser's native `DOMParser`, not a server-side library. Two reasons, both load-bearing:
 
 1. **Security** — this supplier isn't fully trusted, and a naive server-side XML parser resolving external entities/DTDs is a classic XXE attack surface. Browsers don't resolve external entities in `DOMParser`, so this class of vulnerability is avoided by construction, not by configuration.
-2. **Privacy** — invoice content never leaves the browser for the XML/spreadsheet flow. There's no upload endpoint to secure and no server-side log that could retain financial data. The PDF converter is a deliberate, scoped exception — see [PDF-to-UBL converter](#pdf-to-ubl-converter) — because there's no equivalent in-browser way to extract text/tables from a PDF.
+2. **Privacy** — invoice content never leaves the browser for the XML/spreadsheet flow. There's no upload endpoint to secure and no server-side log that could retain financial data. The PDF Converter is a deliberate, scoped exception — see [PDF Converter](#pdf-converter) — because there's no equivalent in-browser way to extract text/tables from a PDF.
 
 ### PDF converter architecture
 
@@ -91,7 +96,7 @@ source .venv/bin/activate
 pip install -r scripts/requirements.txt
 ```
 
-`npm run dev` spawns `python3` by default; set `PYTHON_BIN` (e.g. to `.venv/bin/python3`) if that's not the interpreter with `pdfplumber` installed. The XML/spreadsheet flow on `/` needs no Python at all.
+`npm run dev` spawns `python3` by default; set `PYTHON_BIN` (e.g. to `.venv/bin/python3`) if that's not the interpreter with `pdfplumber` installed. The XML/spreadsheet flow on `/checker` needs no Python at all.
 
 ## Getting started
 
@@ -109,7 +114,8 @@ Test fixtures live in `lib/fixtures/` (valid and deliberately-broken examples fo
 
 Ideas for v2, partly in progress:
 
-- **Dashboard with real data.** The `/dashboard` first draft (see [Status: v2](#status-v2-first-draft)) uses mock data today. Making it real needs a MoSCoW session with finance on scope, plus the Exact Online integration and the persistence layer it requires — see [`docs/dashboard/exact-online-integration.md`](docs/dashboard/exact-online-integration.md).
+- **Dashboard with real data.** The dashboard first draft (now at `/`, see [Status: v2](#status-v2-first-draft)) uses mock data today. Making it real needs a MoSCoW session with finance on scope, plus the Exact Online integration and the persistence layer it requires — see [`docs/dashboard/exact-online-integration.md`](docs/dashboard/exact-online-integration.md).
+- **Vraagposten with real data and real persistence.** The `/vraagposten` first draft (see [Status: Vraagposten](#status-vraagposten-first-draft)) uses mock Vraagposten and in-memory-only answers today. Making it real needs the same Exact Online integration as the dashboard, plus an actual store for submitted answers/files and, if used beyond an internal demo, real authentication behind the current role switcher.
 - **Anomaly flagging** (e.g. totals that don't reconcile with their own line items, unusual tax rates, unexpected document-level charges) — deliberately deferred out of v1 so the readability layer could be validated against real invoices first.
 - **More formats** as new suppliers turn out to use something other than UBL or this spreadsheet export.
 - **Supplier-specific PDF extractor modules** once a recurring PDF-only supplier is identified — see `scripts/extractors/__init__.py`.

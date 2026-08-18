@@ -178,7 +178,7 @@ function Breakdown({ fileName, invoice }: { fileName: string; invoice: ParsedInv
           {invoice.documentAllowancesCharges.map((ac, i) => (
             <div key={i} className="allowance-row">
               <span>
-                <Chip tone={ac.isCharge ? "orange" : "teal"}>{ac.isCharge ? "Toeslag" : "Korting"}</Chip>
+                <Chip tone={ac.isCharge ? "orange" : "green"}>{ac.isCharge ? "Toeslag" : "Korting"}</Chip>
                 {ac.reason ? ` ${ac.reason}` : ""}
               </span>
               <span className="font-medium">
@@ -204,7 +204,7 @@ function Breakdown({ fileName, invoice }: { fileName: string; invoice: ParsedInv
               {invoice.taxSubtotals.map((subtotal, i) => (
                 <tr key={i}>
                   <td>
-                    <Chip tone="ruby">{formatPercent(subtotal.ratePercent)}</Chip>
+                    <Chip tone="blue">{formatPercent(subtotal.ratePercent)}</Chip>
                   </td>
                   <td className="num">{money(subtotal.taxableAmount)}</td>
                   <td className="num">{money(subtotal.taxAmount)}</td>

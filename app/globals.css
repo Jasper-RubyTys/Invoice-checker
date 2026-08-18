@@ -100,14 +100,16 @@
 
   --color-teal-bg: #99f6e4;
   --color-teal-fg: #115e59;
-  --color-green-bg: #cce6ce;
-  --color-green-fg: #0d411a;
+  --color-green-bg: #bbf7d0;
+  --color-green-fg: #14532d;
   --color-yellow-bg: #fcd34d;
   --color-yellow-fg: #713f12;
   --color-orange-bg: #fdba74;
   --color-orange-fg: #8f2f09;
   --color-red-bg: #fca5a5;
   --color-red-fg: #991b1b;
+  --color-blue-bg: #bfdbfe;
+  --color-blue-fg: #1e3a8a;
   --color-gray-bg: #e5e5e5;
   --color-gray-fg: #525252;
 
@@ -168,6 +170,8 @@
   --color-orange-fg: #fb923c;
   --color-red-bg: #3d1416;
   --color-red-fg: #fca5a5;
+  --color-blue-bg: #17233f;
+  --color-blue-fg: #93c5fd;
   --color-gray-bg: #2a2a30;
   --color-gray-fg: #c8c8cc;
   --shadow-popover: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 16px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -209,6 +213,8 @@
     --color-orange-fg: #fb923c;
     --color-red-bg: #3d1416;
     --color-red-fg: #fca5a5;
+    --color-blue-bg: #17233f;
+    --color-blue-fg: #93c5fd;
     --color-gray-bg: #2a2a30;
     --color-gray-fg: #c8c8cc;
     --shadow-popover: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 16px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -357,6 +363,10 @@
     background: var(--color-teal-bg);
     color: var(--color-teal-fg);
   }
+  .chip.blue {
+    background: var(--color-blue-bg);
+    color: var(--color-blue-fg);
+  }
   .chip.ruby {
     background: var(--color-ruby-bg);
     color: var(--color-ruby-fg);
@@ -496,6 +506,10 @@
     font-size: var(--text-sm);
     font-weight: var(--font-weight-semibold);
     white-space: nowrap;
+    transition: color var(--duration-fast);
+  }
+  .app-nav-brand:hover {
+    color: var(--color-ruby-fg);
   }
   .app-nav-links {
     display: flex;
@@ -520,11 +534,10 @@
     font-weight: var(--font-weight-medium);
   }
   .app-page-intro {
-    padding: var(--spacing-16) var(--spacing-24);
+    padding: var(--spacing-12) var(--spacing-24);
     border-bottom: 1px solid var(--color-divider);
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-4);
+    align-items: center;
   }
   .app-main {
     flex: 1;
@@ -781,6 +794,9 @@
     color: var(--color-success);
   }
   .stat-tile-delta.negative {
+    color: var(--color-danger);
+  }
+  .stat-tile-delta.warning {
     color: var(--color-warning);
   }
 
@@ -827,6 +843,74 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-12);
+  }
+
+  /* Vraagposten — see docs/vraagposten-overview.md */
+  .vraagpost-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+  .vraagpost-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    transition: background var(--duration-fast);
+  }
+  .vraagpost-row:hover {
+    background: var(--color-canvas-inset);
+  }
+  .vraagpost-row[data-selected="true"] {
+    background: var(--color-ruby-tint);
+    border-color: var(--color-ruby-bg);
+  }
+  .vraagpost-row button {
+    padding: var(--spacing-8) var(--spacing-12);
+  }
+  .vraagpost-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+  .vraagpost-figures {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-12);
+  }
+
+  .vraagpost-answer-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-12);
+  }
+  .vraagpost-note-input {
+    height: auto;
+    min-height: 96px;
+    max-width: none;
+    padding: var(--spacing-12) var(--spacing-16);
+    resize: vertical;
+  }
+  .vraagpost-answer-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-12);
+  }
+  .vraagpost-answer-preview img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-subtle);
+  }
+  .vraagpost-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-32) var(--spacing-16);
+    color: var(--color-foreground-muted);
+    text-align: center;
   }
 }
 

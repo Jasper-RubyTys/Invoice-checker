@@ -13,15 +13,13 @@ function StatTile({
 }: {
   label: string;
   value: string;
-  delta?: { text: string; positive: boolean };
+  delta?: { text: string; tone: "positive" | "negative" | "warning" };
 }) {
   return (
     <Card className="stat-tile">
       <span className="stat-tile-label">{label}</span>
       <span className="stat-tile-value">{value}</span>
-      {delta && (
-        <span className={`stat-tile-delta ${delta.positive ? "positive" : "negative"}`}>{delta.text}</span>
-      )}
+      {delta && <span className={`stat-tile-delta ${delta.tone}`}>{delta.text}</span>}
     </Card>
   );
 }
@@ -39,7 +37,7 @@ export function SummaryStatTiles({ summary }: SummaryStatTilesProps) {
         value={formatCurrency(summary.totalRevenueExVat, summary.currencyCode)}
         delta={{
           text: `${yoyDeltaPercent >= 0 ? "+" : ""}${formatPercent(yoyDeltaPercent)} t.o.v. vorig jaar`,
-          positive: yoyDeltaPercent >= 0,
+          tone: yoyDeltaPercent >= 0 ? "positive" : "negative",
         }}
       />
       <StatTile label="Gemiddelde marge" value={formatPercent(summary.averageMarginPercent)} />
@@ -48,8 +46,8 @@ export function SummaryStatTiles({ summary }: SummaryStatTilesProps) {
         value={String(summary.outlierCount)}
         delta={
           summary.outlierCount > 0
-            ? { text: "controleren", positive: false }
-            : { text: "geen bijzonderheden", positive: true }
+            ? { text: "controleren", tone: "warning" }
+            : { text: "geen bijzonderheden", tone: "positive" }
         }
       />
     </div>

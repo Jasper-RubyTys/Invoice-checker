@@ -1,6 +1,6 @@
 # PDF Invoice Converter — Function Reference
 
-This document describes every function in the PDF-to-UBL converter feature (`/pdf-invoice`), file by file. For the "why" behind the feature and its one deliberate exception to the app's client-side design, see [`docs/v1-overview.md`](../v1-overview.md#pdf-to-ubl-converter) and the [README's architecture section](../../README.md#pdf-converter-architecture).
+This document describes every function in the PDF Converter feature (`/pdf-invoice`), file by file. For the "why" behind the feature and its one deliberate exception to the app's client-side design, see [`docs/v1-overview.md`](../v1-overview.md#pdf-converter) and the [README's architecture section](../../README.md#pdf-converter-architecture).
 
 ## Data flow
 

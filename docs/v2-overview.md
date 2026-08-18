@@ -2,7 +2,7 @@
 
 ## Why this exists
 
-v1 (the XML/spreadsheet Checker) and v1.1 (the PDF→UBL converter) both work one invoice at a time, in a single browser tab, with nothing saved between sessions. The next step finance asked for is different in kind: a dashboard that looks *across* invoices and months — revenue, margins, which suppliers we spend the most with — sourced eventually from our Exact Online environment.
+v1 (the XML Checker) and v1.1 (the PDF Converter) both work one invoice at a time, in a single browser tab, with nothing saved between sessions. The next step finance asked for is different in kind: a dashboard that looks *across* invoices and months — revenue, margins, which suppliers we spend the most with — sourced eventually from our Exact Online environment.
 
 That's a real project, not an afternoon's work, and the exact scope hasn't been agreed yet — it still needs a proper MoSCoW session with finance. This first draft exists to make that conversation concrete: something finance can look at and react to ("yes we want this, no we don't need that, what about X instead"), rather than agreeing to a scope in the abstract.
 
@@ -74,3 +74,14 @@ The existing invoice models in this codebase (`lib/ubl-invoice.ts`'s `ParsedInvo
 1. A MoSCoW session with finance to agree the real v2 scope — which KPIs, what time ranges, who the audience is (just finance, or wider).
 2. The Exact Online integration — see [`docs/dashboard/exact-online-integration.md`](dashboard/exact-online-integration.md) for the recommended approach and why it requires more than an API route.
 3. Once real data exists: filters/period selection, and re-evaluating whether the three widgets here are the right starting set.
+
+## Update — dashboard promoted to the index route (2026-08-18)
+
+Everything above describes this draft as it was first built, at `/dashboard`, alongside the XML/spreadsheet Checker at `/` and the PDF Converter at `/pdf-invoice`. Since then the dashboard has become the app's front door: it now lives at `/`, and the XML Checker moved to `/checker` to make room. The PDF Converter stayed at `/pdf-invoice`. Concretely, that means:
+
+- `app/dashboard/page.tsx` (referenced above) is now `app/page.tsx`.
+- The former `app/page.tsx` (the XML/spreadsheet checker) is now `app/checker/page.tsx`.
+- Each page's `.app-page-intro` block was also trimmed to a single `<h1>` title — the subtitle copy and inline cross-links described in [Why a shared navigation bar was added now](#why-a-shared-navigation-bar-was-added-now) were removed, since the shared nav already covers navigation between pages.
+- The nav labels are now "Dashboard", "XML Checker", and "PDF Converter".
+
+Everything else in this document (the mock data, the aggregation logic, the open questions under [What's next](#whats-next)) still applies unchanged.
