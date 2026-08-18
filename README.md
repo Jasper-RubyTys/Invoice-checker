@@ -44,9 +44,17 @@ These were deliberate decisions, not oversights — see [Roadmap](#roadmap) for 
 
 One real supplier's invoices turned out to be a legacy **Excel "SpreadsheetML"** export (`<?mso-application progid="Excel.Sheet"?>`), not a UBL invoice — a flat line-item export from what looks like a warehouse/logistics billing system, with no VAT breakdown and no machine-readable supplier identity. The parser (`lib/spreadsheet-invoice.ts`) locates the column headers and header-metadata labels **by their text**, not by fixed row/column numbers, so it should tolerate minor month-to-month template drift. It's only been validated against one real (redacted) sample, though — worth a spot-check the first time a genuinely new invoice comes in.
 
+## Status: v2 (first draft)
+
+A `/dashboard` route now exists — a first, front-end-only draft toward a fuller finance app (revenue, margins, top suppliers), meant to start a scoping conversation with finance rather than to be a finished feature. **Every number on it is fictional sample data**, clearly labeled as such on the page itself; there is no Exact Online connection yet. See [`docs/v2-overview.md`](docs/v2-overview.md) for what was built and why, and [`docs/dashboard/exact-online-integration.md`](docs/dashboard/exact-online-integration.md) for the (also not-yet-built) plan to replace the mock data with a real Exact Online feed.
+
+A shared navigation bar (`components/nav/main-nav.tsx`, rendered from `app/layout.tsx`) was introduced alongside this, replacing the per-page headers `/` and `/pdf-invoice` used to each render on their own.
+
 ## Architecture
 
 - **Next.js (App Router) + TypeScript + Tailwind v4**, no backend for the XML/spreadsheet flow — everything in `app/page.tsx` is a client component holding an in-memory list of uploaded files. The PDF converter (`app/pdf-invoice/page.tsx`) is the one exception; see below.
+- **`components/nav/main-nav.tsx`** — the shared navigation bar rendered once from `app/layout.tsx`, linking `/`, `/pdf-invoice`, and `/dashboard` and hosting the theme toggle. Each page keeps its own short intro text below the nav, but no longer its own header/theme-toggle markup.
+- **`app/dashboard/page.tsx`** — the v2 dashboard first draft, an async Server Component reading from `lib/dashboard-data.ts`'s `getDashboardData()` (currently mock data only — see [`docs/v2-overview.md`](docs/v2-overview.md)). Aggregation logic (ranking suppliers, computing margin outliers) lives separately in `lib/dashboard-aggregations.ts`, unit-tested independently of the mock fixture.
 - **`lib/parse-invoice-file.ts`** — sniffs each file's XML root element and dispatches to the matching parser. Adding a third format later means adding a parser module and one case here, not touching the UI.
 - **`lib/ubl-invoice.ts`** / **`lib/spreadsheet-invoice.ts`** — pure, framework-free parser modules (`parseUblInvoice` / `parseSpreadsheetInvoice`), each returning a typed `{ ok: true, invoice }` or `{ ok: false, error }` result. Never throw — every failure path is a typed `ParseError` (`lib/parse-error.ts`), so one bad file can't crash a batch.
 - **`lib/build-ubl-invoice.ts`** — the mirror image of `lib/ubl-invoice.ts`: serializes a `ParsedInvoice` back into UBL XML (`buildUblInvoiceXml`), client-side via `DOMParser`/`XMLSerializer`. Used by the PDF converter to produce its downloadable XML.
@@ -99,9 +107,9 @@ Test fixtures live in `lib/fixtures/` (valid and deliberately-broken examples fo
 
 ## Roadmap
 
-Ideas for a v2, not yet built:
+Ideas for v2, partly in progress:
 
-- **Database + logger**, so multiple invoices across multiple months can be browsed as an overview instead of one-at-a-time in a single session (the original motivation for this project).
+- **Dashboard with real data.** The `/dashboard` first draft (see [Status: v2](#status-v2-first-draft)) uses mock data today. Making it real needs a MoSCoW session with finance on scope, plus the Exact Online integration and the persistence layer it requires — see [`docs/dashboard/exact-online-integration.md`](docs/dashboard/exact-online-integration.md).
 - **Anomaly flagging** (e.g. totals that don't reconcile with their own line items, unusual tax rates, unexpected document-level charges) — deliberately deferred out of v1 so the readability layer could be validated against real invoices first.
 - **More formats** as new suppliers turn out to use something other than UBL or this spreadsheet export.
 - **Supplier-specific PDF extractor modules** once a recurring PDF-only supplier is identified — see `scripts/extractors/__init__.py`.

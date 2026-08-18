@@ -485,13 +485,46 @@
   /* App shell — bespoke layout classes (not part of the ported atom set),
      composed with the tokens above the same way the source repo's own
      page-level chrome is: hand-rolled structure, token-driven values. */
-  .app-header {
-    padding: var(--spacing-16) var(--spacing-24);
+  .app-nav {
+    padding: var(--spacing-12) var(--spacing-24);
     border-bottom: 1px solid var(--color-divider);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-16);
+    gap: var(--spacing-24);
+  }
+  .app-nav-brand {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+  .app-nav-links {
+    display: flex;
+    flex: 1;
+    gap: var(--spacing-8);
+    flex-wrap: wrap;
+  }
+  .app-nav-link {
+    padding: var(--spacing-4) var(--spacing-12);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    color: var(--color-foreground-muted);
+    transition: background var(--duration-fast), color var(--duration-fast);
+  }
+  .app-nav-link:hover {
+    background: var(--color-canvas-inset);
+    color: var(--color-foreground);
+  }
+  .app-nav-link[aria-current="page"] {
+    background: var(--color-ruby-tint);
+    color: var(--color-ruby-fg);
+    font-weight: var(--font-weight-medium);
+  }
+  .app-page-intro {
+    padding: var(--spacing-16) var(--spacing-24);
+    border-bottom: 1px solid var(--color-divider);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
   }
   .app-main {
     flex: 1;
@@ -711,6 +744,89 @@
     white-space: pre-wrap;
     word-break: break-all;
     max-height: 240px;
+  }
+
+  /* v2 dashboard — see docs/v2-overview.md */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-16);
+  }
+  @media (min-width: 900px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .stat-tile-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-16);
+  }
+  .stat-tile {
+    gap: var(--spacing-4);
+  }
+  .stat-tile-label {
+    font-size: var(--text-sm);
+    color: var(--color-foreground-muted);
+  }
+  .stat-tile-value {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-semibold);
+  }
+  .stat-tile-delta {
+    font-size: var(--text-xs);
+  }
+  .stat-tile-delta.positive {
+    color: var(--color-success);
+  }
+  .stat-tile-delta.negative {
+    color: var(--color-warning);
+  }
+
+  .chart-tooltip {
+    background: var(--color-canvas-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-8) var(--spacing-12);
+    box-shadow: var(--shadow-popover);
+  }
+  .chart-tooltip-value {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-foreground);
+  }
+  .chart-tooltip-label {
+    font-size: var(--text-xs);
+    color: var(--color-foreground-muted);
+  }
+
+  .margin-outlier-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+  .margin-outlier-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-12);
+    padding: var(--spacing-8) 0;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .margin-outlier-row:last-child {
+    border-bottom: none;
+  }
+  .margin-outlier-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+  .margin-outlier-figures {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-12);
   }
 }
 

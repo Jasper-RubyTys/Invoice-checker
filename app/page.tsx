@@ -5,7 +5,6 @@ import { useCallback, useMemo, useState } from "react";
 import { InvoiceDropzone } from "@/components/invoice-dropzone";
 import { InvoiceList } from "@/components/invoice-list";
 import { InvoiceDetail } from "@/components/invoice-detail";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { loadUploadedInvoice, UploadedInvoice } from "@/lib/uploaded-invoice";
 
 export default function Home() {
@@ -30,18 +29,15 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas-page text-foreground">
-      <header className="app-header no-print">
-        <div>
-          <h1 className="text-lg font-semibold">Factuur Checker</h1>
-          <p className="text-sm text-foreground-muted">
-            Vertaalt XML-facturen (UBL/Peppol) naar een leesbaar overzicht — niets verlaat je browser.{" "}
-            <Link href="/pdf-invoice" className="underline">
-              Heb je een PDF-factuur? Zet hem hier om →
-            </Link>
-          </p>
-        </div>
-        <ThemeToggle />
-      </header>
+      <div className="app-page-intro no-print">
+        <h1 className="text-lg font-semibold">Factuur Checker</h1>
+        <p className="text-sm text-foreground-muted">
+          Vertaalt XML-facturen (UBL/Peppol) naar een leesbaar overzicht — niets verlaat je browser.{" "}
+          <Link href="/pdf-invoice" className="underline">
+            Heb je een PDF-factuur? Zet hem hier om →
+          </Link>
+        </p>
+      </div>
 
       <main className="app-main">
         <aside className="app-sidebar no-print">

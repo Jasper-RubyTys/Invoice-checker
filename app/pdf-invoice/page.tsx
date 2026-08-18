@@ -7,7 +7,6 @@ import { InvoiceEditForm } from "@/components/invoice-edit-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { PdfUploadError } from "@/lib/pdf-upload-error";
 import { ParsedInvoice } from "@/lib/ubl-invoice";
 
@@ -90,18 +89,15 @@ export default function PdfInvoicePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas-page text-foreground">
-      <header className="app-header no-print">
-        <div>
-          <h1 className="text-lg font-semibold">PDF-factuur → UBL XML</h1>
-          <p className="text-sm text-foreground-muted">
-            Zet een PDF-factuur om naar een UBL XML-bestand voor het boekhoudprogramma.{" "}
-            <Link href="/" className="underline">
-              Terug naar de XML-viewer
-            </Link>
-          </p>
-        </div>
-        <ThemeToggle />
-      </header>
+      <div className="app-page-intro no-print">
+        <h1 className="text-lg font-semibold">PDF-factuur → UBL XML</h1>
+        <p className="text-sm text-foreground-muted">
+          Zet een PDF-factuur om naar een UBL XML-bestand voor het boekhoudprogramma.{" "}
+          <Link href="/" className="underline">
+            Terug naar de XML-viewer
+          </Link>
+        </p>
+      </div>
 
       <main className="app-detail flex-1">
         {status === "idle" && (
