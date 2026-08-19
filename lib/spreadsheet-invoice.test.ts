@@ -8,6 +8,15 @@ function fixture(name: string): string {
 }
 
 describe("parseSpreadsheetInvoice", () => {
+  it("uses a pre-parsed document when provided, instead of re-parsing xmlText", () => {
+    const doc = new DOMParser().parseFromString(fixture("valid-spreadsheet-invoice.xml"), "application/xml");
+    const result = parseSpreadsheetInvoice("this is not xml", doc);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.invoice.invoiceNumber).toBe("F-2026-001");
+  });
+
+
   it("parses header metadata and line items from a valid workbook invoice", () => {
     const result = parseSpreadsheetInvoice(fixture("valid-spreadsheet-invoice.xml"));
     expect(result.ok).toBe(true);

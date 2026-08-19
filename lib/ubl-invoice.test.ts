@@ -8,6 +8,15 @@ function fixture(name: string): string {
 }
 
 describe("parseUblInvoice", () => {
+  it("uses a pre-parsed document when provided, instead of re-parsing xmlText", () => {
+    const doc = new DOMParser().parseFromString(fixture("valid-minimal-invoice.xml"), "application/xml");
+    const result = parseUblInvoice("this is not xml", doc);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.invoice.invoiceNumber).toBe("INV-2026-0001");
+  });
+
+
   it("parses a valid minimal UBL invoice", () => {
     const result = parseUblInvoice(fixture("valid-minimal-invoice.xml"));
     expect(result.ok).toBe(true);

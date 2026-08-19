@@ -87,18 +87,19 @@ export default function PdfInvoicePage() {
   }, [revokePdfUrl]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas-page text-foreground">
+    <div className="flex flex-1 min-h-0 flex-col overflow-hidden print:h-auto print:overflow-visible bg-canvas-page text-foreground">
       <div className="app-page-intro no-print">
         <h1 className="text-lg font-semibold">PDF Converter</h1>
       </div>
 
-      <main className="app-detail flex-1">
+      <main className={`app-detail flex-1 ${status === "idle" ? "min-h-0" : ""}`}>
         {status === "idle" && (
           <InvoiceDropzone
             onFiles={handleFiles}
             accept=".pdf,application/pdf"
             title="Sleep een PDF-factuur hierheen, of klik om te kiezen"
             hint="Eén factuur per keer — controleer de uitgelezen gegevens voordat je de XML downloadt"
+            className="dropzone-fill"
           />
         )}
 

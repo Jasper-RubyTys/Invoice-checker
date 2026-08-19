@@ -20,7 +20,7 @@ export interface UploadedInvoice {
 }
 
 /** Generous for a real invoice — a sanity cap, not a hard technical limit. */
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
 function toUploadError(error: ParseError): UploadError {
   return error;
@@ -50,7 +50,7 @@ export async function loadUploadedInvoice(file: File): Promise<UploadedInvoice> 
       status: "error",
       error: {
         kind: "too-large",
-        message: "Dit bestand is groter dan 10 MB — ongebruikelijk voor een factuur. Controleer het bestand.",
+        message: "Dit bestand is groter dan 25 MB — ongebruikelijk voor onze facturen. Controleer het bestand.",
       },
     };
   }

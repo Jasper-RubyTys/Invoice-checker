@@ -14,35 +14,45 @@ export type ParsedDocument =
 
 export type ParseFileResult = { ok: true; document: ParsedDocument } | { ok: false; error: ParseError };
 
-type Format = "ubl" | "spreadsheet" | "xml-syntax" | "unknown";
+type Format = "ubl" | "spreadsheet" | "unknown";
 
-function detectFormat(xmlText: string): Format {
-  let doc: Document;
-  try {
-    doc = new DOMParser().parseFromString(xmlText, "application/xml");
-  } catch {
-    return "xml-syntax";
-  }
-  if (doc.getElementsByTagName("parsererror").length > 0) return "xml-syntax";
-
+function detectFormat(doc: Document): Format {
   const root = doc.documentElement;
   if (root?.namespaceURI === NS_INVOICE && root.localName === "Invoice") return "ubl";
   if (root?.namespaceURI === NS_SPREADSHEET && root.localName === "Workbook") return "spreadsheet";
   return "unknown";
 }
 
+/**
+ * Parses the XML once and reuses the resulting Document for both format
+ * sniffing and the format-specific extraction below — large files were
+ * previously parsed twice (once here, once again inside the format parser).
+ */
+function parseXmlOnce(xmlText: string): { ok: true; doc: Document } | { ok: false } {
+  try {
+    const doc = new DOMParser().parseFromString(xmlText, "application/xml");
+    if (doc.getElementsByTagName("parsererror").length > 0) return { ok: false };
+    return { ok: true, doc };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export function parseInvoiceFile(xmlText: string): ParseFileResult {
-  switch (detectFormat(xmlText)) {
+  const parsed = parseXmlOnce(xmlText);
+  if (!parsed.ok) {
+    return { ok: false, error: { kind: "xml-syntax", message: "Dit bestand is geen geldig XML-bestand." } };
+  }
+
+  switch (detectFormat(parsed.doc)) {
     case "ubl": {
-      const result = parseUblInvoice(xmlText);
+      const result = parseUblInvoice(xmlText, parsed.doc);
       return result.ok ? { ok: true, document: { kind: "ubl", invoice: result.invoice } } : result;
     }
     case "spreadsheet": {
-      const result = parseSpreadsheetInvoice(xmlText);
+      const result = parseSpreadsheetInvoice(xmlText, parsed.doc);
       return result.ok ? { ok: true, document: { kind: "spreadsheet", invoice: result.invoice } } : result;
     }
-    case "xml-syntax":
-      return { ok: false, error: { kind: "xml-syntax", message: "Dit bestand is geen geldig XML-bestand." } };
     default:
       return {
         ok: false,

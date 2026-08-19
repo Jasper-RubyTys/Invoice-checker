@@ -26,15 +26,17 @@ export default function CheckerPage() {
     [files, selectedId],
   );
 
+  const isEmpty = files.length === 0;
+
   return (
-    <div className="flex min-h-screen flex-col bg-canvas-page text-foreground">
+    <div className="flex flex-1 min-h-0 flex-col overflow-hidden print:h-auto print:overflow-visible bg-canvas-page text-foreground">
       <div className="app-page-intro no-print">
         <h1 className="text-lg font-semibold">XML Checker</h1>
       </div>
 
       <main className="app-main">
-        <aside className="app-sidebar no-print">
-          <InvoiceDropzone onFiles={handleFiles} />
+        <aside className={`app-sidebar no-print ${isEmpty ? "app-sidebar-empty" : ""}`}>
+          <InvoiceDropzone onFiles={handleFiles} className={isEmpty ? "dropzone-fill" : ""} />
           <InvoiceList
             files={files}
             selectedId={selectedId}
@@ -43,7 +45,7 @@ export default function CheckerPage() {
           />
         </aside>
 
-        <section className="app-detail print-area">
+        <section className={`app-detail print-area ${isEmpty ? "hidden md:flex" : ""}`}>
           <InvoiceDetail uploaded={selected} />
         </section>
       </main>

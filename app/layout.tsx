@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { MainNav } from "@/components/nav/main-nav";
+import { SidebarNav } from "@/components/nav/sidebar-nav";
 import "./globals.css";
 
 const inter = Inter({
@@ -29,9 +29,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col">
-        <MainNav />
-        {children}
+      <body>
+        <SidebarNav>{children}</SidebarNav>
       </body>
     </html>
   );

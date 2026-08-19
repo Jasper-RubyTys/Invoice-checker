@@ -4,7 +4,7 @@
  * depreciation entries — see docs/vraagposten-overview.md.
  */
 
-export type VraagpostStatus = "open" | "beantwoord";
+export type VraagpostStatus = "open" | "beantwoord" | "heropend";
 
 export interface Vraagpost {
   id: string;

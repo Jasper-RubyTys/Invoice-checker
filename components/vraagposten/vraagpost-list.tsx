@@ -1,15 +1,7 @@
 import { Chip } from "@/components/ui/chip";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Vraagpost, VraagpostStatus } from "@/lib/vraagpost-data";
-
-export const STATUS_LABELS: Record<VraagpostStatus, string> = {
-  open: "Open",
-  beantwoord: "Beantwoord",
-};
-
-export function toneForVraagpostStatus(status: VraagpostStatus): "orange" | "green" {
-  return status === "beantwoord" ? "green" : "orange";
-}
+import { STATUS_LABELS, toneForVraagpostStatus } from "@/lib/vraagpost-status";
 
 interface VraagpostListProps {
   vraagposten: Vraagpost[];

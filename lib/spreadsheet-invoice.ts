@@ -239,19 +239,23 @@ function parseLines(
   return lines;
 }
 
-export function parseSpreadsheetInvoice(xmlText: string): SpreadsheetParseResult {
+export function parseSpreadsheetInvoice(xmlText: string, preParsedDoc?: Document): SpreadsheetParseResult {
   let doc: Document;
-  try {
-    doc = new DOMParser().parseFromString(xmlText, "application/xml");
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        kind: "unknown",
-        message: "Kon dit bestand niet als XML inlezen.",
-        detail: err instanceof Error ? err.message : String(err),
-      },
-    };
+  if (preParsedDoc) {
+    doc = preParsedDoc;
+  } else {
+    try {
+      doc = new DOMParser().parseFromString(xmlText, "application/xml");
+    } catch (err) {
+      return {
+        ok: false,
+        error: {
+          kind: "unknown",
+          message: "Kon dit bestand niet als XML inlezen.",
+          detail: err instanceof Error ? err.message : String(err),
+        },
+      };
+    }
   }
 
   if (doc.getElementsByTagName("parsererror").length > 0) {

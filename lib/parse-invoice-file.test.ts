@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseInvoiceFile } from "./parse-invoice-file";
@@ -8,6 +8,22 @@ function fixture(name: string): string {
 }
 
 describe("parseInvoiceFile", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("parses the XML document only once for a valid UBL file", () => {
+    const parseSpy = vi.spyOn(DOMParser.prototype, "parseFromString");
+    parseInvoiceFile(fixture("valid-minimal-invoice.xml"));
+    expect(parseSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("parses the XML document only once for a valid workbook file", () => {
+    const parseSpy = vi.spyOn(DOMParser.prototype, "parseFromString");
+    parseInvoiceFile(fixture("valid-spreadsheet-invoice.xml"));
+    expect(parseSpy).toHaveBeenCalledTimes(1);
+  });
+
   it("routes a UBL invoice to the ubl parser", () => {
     const result = parseInvoiceFile(fixture("valid-minimal-invoice.xml"));
     expect(result.ok).toBe(true);

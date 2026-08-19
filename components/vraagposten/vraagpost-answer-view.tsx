@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { ImagePreviewModal } from "@/components/ui/image-preview-modal";
 import { formatDate } from "@/lib/format";
 import { useObjectUrl } from "@/lib/use-object-url";
 import { Answer } from "@/lib/vraagpost-answers";
@@ -8,6 +10,7 @@ import { Answer } from "@/lib/vraagpost-answers";
 export function VraagpostAnswerView({ answer }: { answer: Answer | null }) {
   const receiptUrl = useObjectUrl(answer?.receiptImage ?? null);
   const invoiceUrl = useObjectUrl(answer?.invoicePdf ?? null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   if (!answer) {
     return (
@@ -24,9 +27,31 @@ export function VraagpostAnswerView({ answer }: { answer: Answer | null }) {
       {receiptUrl && (
         <div className="vraagpost-answer-preview">
           {/* eslint-disable-next-line @next/next/no-img-element -- transient blob: preview, not an optimizable asset */}
-          <img src={receiptUrl} alt="Bon aangeleverd door Directie" />
-          <span className="text-xs text-foreground-muted">{answer.receiptImage?.name}</span>
+          <img
+            src={receiptUrl}
+            alt="Bon aangeleverd door Directie"
+            role="button"
+            tabIndex={0}
+            onClick={() => setIsPreviewOpen(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setIsPreviewOpen(true);
+              }
+            }}
+          />
+          <a href={receiptUrl} download={answer.receiptImage?.name} className="btn secondary sm">
+            {answer.receiptImage?.name} downloaden
+          </a>
         </div>
+      )}
+
+      {isPreviewOpen && receiptUrl && (
+        <ImagePreviewModal
+          src={receiptUrl}
+          alt="Bon aangeleverd door Directie"
+          onClose={() => setIsPreviewOpen(false)}
+        />
       )}
 
       {invoiceUrl && answer.invoicePdf && (

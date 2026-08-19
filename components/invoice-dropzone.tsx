@@ -7,6 +7,7 @@ interface InvoiceDropzoneProps {
   accept?: string;
   title?: string;
   hint?: string;
+  className?: string;
 }
 
 export function InvoiceDropzone({
@@ -14,6 +15,7 @@ export function InvoiceDropzone({
   accept = ".xml,text/xml,application/xml",
   title = "Sleep XML-facturen hierheen, of klik om te kiezen",
   hint = "Meerdere UBL/Peppol .xml-bestanden tegelijk toegestaan",
+  className = "",
 }: InvoiceDropzoneProps) {
   const [isActive, setIsActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +36,7 @@ export function InvoiceDropzone({
 
   return (
     <div
-      className={`input-wrap flex-col gap-4 text-center cursor-pointer ${isActive ? "is-active" : ""}`}
+      className={`input-wrap flex-col gap-4 text-center cursor-pointer ${isActive ? "is-active" : ""} ${className}`}
       onClick={() => inputRef.current?.click()}
       onDragOver={(event) => {
         event.preventDefault();

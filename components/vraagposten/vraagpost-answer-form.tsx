@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
 import { InvoiceDropzone } from "@/components/invoice-dropzone";
 import { Button } from "@/components/ui/button";
+import { ReceiptPhotoInput } from "@/components/vraagposten/receipt-photo-input";
+import { formatDate } from "@/lib/format";
 import { useObjectUrl } from "@/lib/use-object-url";
 import { Answer } from "@/lib/vraagpost-answers";
 import { Vraagpost } from "@/lib/vraagpost-data";
+import { FinanceNote } from "@/lib/vraagpost-finance-notes";
+
+/** How long the button's "Verzonden" flash and the toast stay visible, in ms. */
+const SENT_FEEDBACK_DURATION = 1800;
+const TOAST_DURATION = 2500;
 
 interface VraagpostAnswerFormProps {
   vraagpost: Vraagpost;
   existingAnswer: Answer | null;
+  /** Set when finance sent this Vraagpost back asking for more information. */
+  financeNote: FinanceNote | null;
   onSubmit: (answer: Answer) => void;
 }
 
@@ -19,13 +29,33 @@ interface VraagpostAnswerFormProps {
  * Vraagpost remounts the form with fresh state, rather than resetting it
  * via an effect.
  */
-export function VraagpostAnswerForm({ vraagpost, existingAnswer, onSubmit }: VraagpostAnswerFormProps) {
+export function VraagpostAnswerForm({
+  vraagpost,
+  existingAnswer,
+  financeNote,
+  onSubmit,
+}: VraagpostAnswerFormProps) {
   const [note, setNote] = useState(existingAnswer?.note ?? "");
   const [receiptImage, setReceiptImage] = useState<File | null>(existingAnswer?.receiptImage ?? null);
   const [invoicePdf, setInvoicePdf] = useState<File | null>(existingAnswer?.invoicePdf ?? null);
 
   const receiptPreviewUrl = useObjectUrl(receiptImage);
   const canSubmit = note.trim().length > 0 || receiptImage !== null || invoicePdf !== null;
+
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    if (!justSubmitted) return;
+    const timer = setTimeout(() => setJustSubmitted(false), SENT_FEEDBACK_DURATION);
+    return () => clearTimeout(timer);
+  }, [justSubmitted]);
+
+  useEffect(() => {
+    if (!showToast) return;
+    const timer = setTimeout(() => setShowToast(false), TOAST_DURATION);
+    return () => clearTimeout(timer);
+  }, [showToast]);
 
   const handleSubmit = () => {
     onSubmit({
@@ -36,10 +66,20 @@ export function VraagpostAnswerForm({ vraagpost, existingAnswer, onSubmit }: Vra
       submittedAt: new Date().toISOString(),
       submittedByRole: "directie",
     });
+    setJustSubmitted(true);
+    setShowToast(true);
   };
 
   return (
     <div className="vraagpost-answer-form">
+      {financeNote && (
+        <div className="vraagpost-finance-note">
+          <span className="text-sm font-medium">Finance heeft dit teruggestuurd</span>
+          <p className="text-sm whitespace-pre-wrap">{financeNote.note}</p>
+          <span className="text-xs">Teruggestuurd op {formatDate(financeNote.createdAt)}</span>
+        </div>
+      )}
+
       <textarea
         className="text-input vraagpost-note-input"
         placeholder="Leg uit waar deze afschrijving vandaan komt…"
@@ -47,12 +87,7 @@ export function VraagpostAnswerForm({ vraagpost, existingAnswer, onSubmit }: Vra
         onChange={(event) => setNote(event.target.value)}
       />
 
-      <InvoiceDropzone
-        accept="image/*"
-        title="Sleep een foto van de bon hierheen, of klik om te kiezen"
-        hint="JPG, PNG of HEIC"
-        onFiles={(files) => setReceiptImage(files[0] ?? null)}
-      />
+      <ReceiptPhotoInput onFiles={(files) => setReceiptImage(files[0] ?? null)} />
       {receiptImage && (
         <div className="vraagpost-answer-preview">
           {receiptPreviewUrl && (
@@ -75,9 +110,30 @@ export function VraagpostAnswerForm({ vraagpost, existingAnswer, onSubmit }: Vra
         </div>
       )}
 
-      <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-        Antwoord opslaan
+      <Button
+        type="button"
+        onClick={handleSubmit}
+        disabled={!canSubmit}
+        className={justSubmitted ? "vraagpost-submit-sent" : ""}
+      >
+        {justSubmitted ? (
+          <>
+            <Check size={16} aria-hidden="true" />
+            Verzonden
+          </>
+        ) : existingAnswer ? (
+          "Antwoord bijwerken"
+        ) : (
+          "Antwoord opslaan"
+        )}
       </Button>
+
+      {showToast && (
+        <div className="vraagpost-toast" role="status">
+          <Check size={16} aria-hidden="true" />
+          Antwoord verzonden
+        </div>
+      )}
     </div>
   );
 }

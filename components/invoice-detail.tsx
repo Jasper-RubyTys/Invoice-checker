@@ -13,6 +13,7 @@ import { formatCurrency, formatDate, formatPercent, formatQuantity } from "@/lib
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
+import { VirtualTable } from "@/components/ui/virtual-table";
 
 interface InvoiceDetailProps {
   uploaded: UploadedInvoice | null;
@@ -138,39 +139,37 @@ function Breakdown({ fileName, invoice }: { fileName: string; invoice: ParsedInv
       </div>
 
       <Card title="Factuurregels" collapsible storageKey="invoice-lines">
-        <div className="overflow-x-auto">
-          <table className="breakdown-table">
-            <thead>
-              <tr>
-                <th>Omschrijving</th>
-                <th className="num">Aantal</th>
-                <th className="num">Prijs</th>
-                <th className="num">BTW</th>
-                <th className="num">Totaal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.lines.map((line) => (
-                <tr key={line.id}>
-                  <td>
-                    {line.description}
-                    {line.allowancesCharges.map((ac, i) => (
-                      <div key={i} className="text-xs text-foreground-muted">
-                        {ac.isCharge ? "+ " : "− "}
-                        {money(ac.amount)}
-                        {ac.reason ? ` (${ac.reason})` : ""}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="num">{formatQuantity(line.quantity, line.unitCode)}</td>
-                  <td className="num">{money(line.unitPrice)}</td>
-                  <td className="num">{formatPercent(line.taxPercent)}</td>
-                  <td className="num">{money(line.lineExtensionAmount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <VirtualTable
+          items={invoice.lines}
+          colSpan={5}
+          head={
+            <tr>
+              <th>Omschrijving</th>
+              <th className="num">Aantal</th>
+              <th className="num">Prijs</th>
+              <th className="num">BTW</th>
+              <th className="num">Totaal</th>
+            </tr>
+          }
+          renderRow={(line) => (
+            <tr key={line.id}>
+              <td>
+                {line.description}
+                {line.allowancesCharges.map((ac, i) => (
+                  <div key={i} className="text-xs text-foreground-muted">
+                    {ac.isCharge ? "+ " : "− "}
+                    {money(ac.amount)}
+                    {ac.reason ? ` (${ac.reason})` : ""}
+                  </div>
+                ))}
+              </td>
+              <td className="num">{formatQuantity(line.quantity, line.unitCode)}</td>
+              <td className="num">{money(line.unitPrice)}</td>
+              <td className="num">{formatPercent(line.taxPercent)}</td>
+              <td className="num">{money(line.lineExtensionAmount)}</td>
+            </tr>
+          )}
+        />
       </Card>
 
       {invoice.documentAllowancesCharges.length > 0 && (
@@ -192,26 +191,28 @@ function Breakdown({ fileName, invoice }: { fileName: string; invoice: ParsedInv
 
       {invoice.taxSubtotals.length > 0 && (
         <Card title="BTW-overzicht" collapsible storageKey="tax-subtotals">
-          <table className="breakdown-table">
-            <thead>
-              <tr>
-                <th>Tarief</th>
-                <th className="num">Grondslag</th>
-                <th className="num">BTW-bedrag</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.taxSubtotals.map((subtotal, i) => (
-                <tr key={i}>
-                  <td>
-                    <Chip tone="blue">{formatPercent(subtotal.ratePercent)}</Chip>
-                  </td>
-                  <td className="num">{money(subtotal.taxableAmount)}</td>
-                  <td className="num">{money(subtotal.taxAmount)}</td>
+          <div className="virtual-table-scroll" style={{ maxHeight: 400 }}>
+            <table className="breakdown-table">
+              <thead>
+                <tr>
+                  <th>Tarief</th>
+                  <th className="num">Grondslag</th>
+                  <th className="num">BTW-bedrag</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {invoice.taxSubtotals.map((subtotal, i) => (
+                  <tr key={i}>
+                    <td>
+                      <Chip tone="blue">{formatPercent(subtotal.ratePercent)}</Chip>
+                    </td>
+                    <td className="num">{money(subtotal.taxableAmount)}</td>
+                    <td className="num">{money(subtotal.taxAmount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
       )}
 
@@ -247,6 +248,13 @@ function SpreadsheetBreakdown({ fileName, invoice }: { fileName: string; invoice
     if (!query) return articleSubtotals;
     return articleSubtotals.filter((subtotal) => subtotal.articleCode.toLowerCase().includes(query));
   }, [articleSubtotals, articleFilter]);
+  const articleGrandTotal = useMemo(
+    () => ({
+      count: articleSubtotals.reduce((sum, s) => sum + s.count, 0) + (uncodedSummary?.count ?? 0),
+      total: articleSubtotals.reduce((sum, s) => sum + s.total, 0) + (uncodedSummary?.total ?? 0),
+    }),
+    [articleSubtotals, uncodedSummary],
+  );
 
   return (
     <>
@@ -283,24 +291,26 @@ function SpreadsheetBreakdown({ fileName, invoice }: { fileName: string; invoice
       </div>
 
       <Card title="Kostenoverzicht per dienst" collapsible storageKey="service-subtotals">
-        <table className="breakdown-table">
-          <thead>
-            <tr>
-              <th>Dienst</th>
-              <th className="num">Aantal regels</th>
-              <th className="num">Subtotaal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {subtotals.map((subtotal) => (
-              <tr key={subtotal.description}>
-                <td>{subtotal.description}</td>
-                <td className="num">{subtotal.count}</td>
-                <td className="num">{money(subtotal.total)}</td>
+        <div className="virtual-table-scroll" style={{ maxHeight: 400 }}>
+          <table className="breakdown-table">
+            <thead>
+              <tr>
+                <th>Dienst</th>
+                <th className="num">Aantal regels</th>
+                <th className="num">Subtotaal</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {subtotals.map((subtotal) => (
+                <tr key={subtotal.description}>
+                  <td>{subtotal.description}</td>
+                  <td className="num">{subtotal.count}</td>
+                  <td className="num">{money(subtotal.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <Card title="Kostenoverzicht per artikel" collapsible storageKey="article-subtotals">
@@ -316,75 +326,91 @@ function SpreadsheetBreakdown({ fileName, invoice }: { fileName: string; invoice
         ) : filteredArticleSubtotals.length === 0 && !uncodedSummary ? (
           <p className="text-sm text-foreground-muted">Geen artikel gevonden voor &quot;{articleFilter}&quot;.</p>
         ) : (
-          <table className="breakdown-table">
-            <thead>
-              <tr>
-                <th>Artikelnr</th>
-                <th>Omschrijving</th>
-                <th className="num">Aantal regels</th>
-                <th className="num">Subtotaal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredArticleSubtotals.map((subtotal) => (
-                <tr key={subtotal.articleCode}>
-                  <td>{subtotal.articleCode}</td>
-                  <td>{subtotal.description}</td>
-                  <td className="num">{subtotal.count}</td>
-                  <td className="num">{money(subtotal.total)}</td>
+          <div className="virtual-table-scroll" style={{ maxHeight: 400 }}>
+            <table className="breakdown-table">
+              <thead>
+                <tr>
+                  <th>Artikelnr</th>
+                  <th>Omschrijving</th>
+                  <th className="num">Aantal regels</th>
+                  <th className="num">Subtotaal</th>
                 </tr>
-              ))}
-              {uncodedSummary && (
-                <>
-                  <tr className="divider-row">
-                    <td colSpan={4} />
+              </thead>
+              <tbody>
+                {filteredArticleSubtotals.map((subtotal) => (
+                  <tr key={subtotal.articleCode}>
+                    <td>{subtotal.articleCode}</td>
+                    <td>{subtotal.description}</td>
+                    <td className="num">{subtotal.count}</td>
+                    <td className="num">{money(subtotal.total)}</td>
                   </tr>
+                ))}
+                {uncodedSummary && (
                   <tr>
-                    <td><b>Ontbrekend artikelnummer</b></td>
-                    <td><b>–</b></td>
+                    <td>
+                      <Chip tone="orange">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path
+                            d="M8 1.5 15 14.5H1L8 1.5Z"
+                            stroke="currentColor"
+                            strokeWidth="1.3"
+                            strokeLinejoin="round"
+                          />
+                          <path d="M8 6v3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                          <circle cx="8" cy="11.75" r="0.9" fill="currentColor" />
+                        </svg>
+                        Ontbrekend artikelnummer
+                      </Chip>
+                    </td>
+                    <td>–</td>
                     <td className="num">{uncodedSummary.count}</td>
                     <td className="num">{money(uncodedSummary.total)}</td>
                   </tr>
-                </>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={2}>Totaal</td>
+                  <td className="num">{articleGrandTotal.count}</td>
+                  <td className="num">{money(articleGrandTotal.total)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         )}
       </Card>
 
       <Card title="Factuurregels" collapsible storageKey="spreadsheet-lines">
-        <div className="overflow-x-auto">
-          <table className="breakdown-table">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Order</th>
-                <th>Referentie</th>
-                <th>Dienst</th>
-                <th>Artikel</th>
-                <th>Omschrijving</th>
-                <th className="num">Aantal</th>
-                <th className="num">Bedrag</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.lines.map((line, i) => (
-                <tr key={i}>
-                  <td>{line.date ?? "–"}</td>
-                  <td>{line.order ?? "–"}</td>
-                  <td>{line.reference ?? "–"}</td>
-                  <td>{line.serviceCode ?? "–"}</td>
-                  <td>{line.articleCode ?? "–"}</td>
-                  <td>{line.description}</td>
-                  <td className="num">
-                    {line.quantity !== undefined ? formatQuantity(line.quantity, line.unit) : "–"}
-                  </td>
-                  <td className="num">{money(line.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <VirtualTable
+          items={invoice.lines}
+          colSpan={8}
+          head={
+            <tr>
+              <th>Datum</th>
+              <th>Order</th>
+              <th>Referentie</th>
+              <th>Dienst</th>
+              <th>Artikel</th>
+              <th>Omschrijving</th>
+              <th className="num">Aantal</th>
+              <th className="num">Bedrag</th>
+            </tr>
+          }
+          renderRow={(line, i) => (
+            <tr key={i}>
+              <td>{line.date ?? "–"}</td>
+              <td>{line.order ?? "–"}</td>
+              <td>{line.reference ?? "–"}</td>
+              <td>{line.serviceCode ?? "–"}</td>
+              <td>{line.articleCode ?? "–"}</td>
+              <td>{line.description}</td>
+              <td className="num">
+                {line.quantity !== undefined ? formatQuantity(line.quantity, line.unit) : "–"}
+              </td>
+              <td className="num">{money(line.amount)}</td>
+            </tr>
+          )}
+        />
       </Card>
     </>
   );

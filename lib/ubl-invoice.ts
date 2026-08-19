@@ -315,19 +315,23 @@ function parseInvoiceElement(root: Element): ParseResult {
  * so a caller looping over a batch of files can't have one bad file crash the
  * rest.
  */
-export function parseUblInvoice(xmlText: string): ParseResult {
+export function parseUblInvoice(xmlText: string, preParsedDoc?: Document): ParseResult {
   let doc: Document;
-  try {
-    doc = new DOMParser().parseFromString(xmlText, "application/xml");
-  } catch (err) {
-    return {
-      ok: false,
-      error: {
-        kind: "unknown",
-        message: "Kon dit bestand niet als XML inlezen.",
-        detail: err instanceof Error ? err.message : String(err),
-      },
-    };
+  if (preParsedDoc) {
+    doc = preParsedDoc;
+  } else {
+    try {
+      doc = new DOMParser().parseFromString(xmlText, "application/xml");
+    } catch (err) {
+      return {
+        ok: false,
+        error: {
+          kind: "unknown",
+          message: "Kon dit bestand niet als XML inlezen.",
+          detail: err instanceof Error ? err.message : String(err),
+        },
+      };
+    }
   }
 
   const parserError = doc.getElementsByTagName("parsererror")[0];
