@@ -1300,6 +1300,46 @@
     color: var(--color-foreground);
     cursor: pointer;
   }
+
+  /* Static-demo placeholder for the PDF Converter — this deployment has no
+     server to run the Python extractor, so uploading is disabled entirely
+     rather than left to fail after the fact. */
+  .construction-hazard-bar {
+    height: 8px;
+    border-radius: var(--radius-full) var(--radius-full) 0 0;
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--color-yellow-bg) 0,
+      var(--color-yellow-bg) 12px,
+      var(--color-foreground) 12px,
+      var(--color-foreground) 24px
+    );
+  }
+  .construction-icon {
+    display: inline-flex;
+    animation: construction-wiggle 2.6s ease-in-out infinite;
+  }
+  @keyframes construction-wiggle {
+    0%,
+    100% {
+      transform: rotate(-8deg);
+    }
+    50% {
+      transform: rotate(8deg);
+    }
+  }
+  .construction-upload-mock {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-12) var(--spacing-16);
+    color: var(--color-foreground-muted);
+    background: var(--color-canvas-inset);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }
 
 @media print {

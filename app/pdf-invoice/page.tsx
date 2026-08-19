@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InvoiceDropzone } from "@/components/invoice-dropzone";
 import { InvoiceEditForm } from "@/components/invoice-edit-form";
+import { PdfConverterPlaceholder } from "@/components/pdf-invoice/pdf-converter-placeholder";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { PdfUploadError } from "@/lib/pdf-upload-error";
 import { ParsedInvoice } from "@/lib/ubl-invoice";
+
+const IS_STATIC_DEMO = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
 
 type Status = "idle" | "loading" | "review" | "error";
 
@@ -20,6 +23,23 @@ interface ExtractResponse {
 }
 
 export default function PdfInvoicePage() {
+  if (IS_STATIC_DEMO) {
+    return (
+      <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-canvas-page text-foreground">
+        <div className="app-page-intro no-print">
+          <h1 className="text-lg font-semibold">PDF Converter</h1>
+        </div>
+        <main className="app-detail flex-1 min-h-0">
+          <PdfConverterPlaceholder />
+        </main>
+      </div>
+    );
+  }
+
+  return <PdfInvoicePageInteractive />;
+}
+
+function PdfInvoicePageInteractive() {
   const [status, setStatus] = useState<Status>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);

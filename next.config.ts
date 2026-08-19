@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     basePath: "/Invoice-checker",
     assetPrefix: "/Invoice-checker",
     trailingSlash: true,
+    env: { NEXT_PUBLIC_STATIC_EXPORT: "true" },
   }),
 };
 
