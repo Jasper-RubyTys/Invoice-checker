@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+const isStaticExport = process.env.STATIC_EXPORT === "true";
 
-module.exports = {
-  allowedDevOrigins: ['192.168.24.159'],
+const nextConfig: NextConfig = {
+  allowedDevOrigins: ["192.168.24.159"],
+  ...(isStaticExport && {
+    output: "export",
+    basePath: "/Invoice-checker",
+    assetPrefix: "/Invoice-checker",
+    trailingSlash: true,
+  }),
 };
 
 export default nextConfig;

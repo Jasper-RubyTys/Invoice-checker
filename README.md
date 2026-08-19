@@ -2,6 +2,12 @@
 
 A small internal tool for translating machine-unreadable supplier invoices into a clear, human-readable breakdown for finance — built because one particular supplier sends invoices as raw XML/spreadsheet exports instead of PDFs, and we don't fully trust that supplier enough to take "the total is €X" at face value without being able to see why.
 
+## Live demo
+
+A static, mock-data build is hosted on GitHub Pages: **https://jasper-rubytys.github.io/Invoice-checker/**
+
+This is a `next build` static export (`STATIC_EXPORT=true npm run build`, see `next.config.ts`) of the Dashboard, XML Checker, and Vraagposten pages — all mock data, no backend. The **PDF Converter** page is included in the nav but shows a "not available in this demo" message instead of extracting PDFs, since that feature needs a live server (Python subprocess) that GitHub Pages can't run. To publish an update: temporarily move `app/api` aside, run `STATIC_EXPORT=true npm run build`, move `app/api` back, then `npx gh-pages -d out`.
+
 ## Status: v1
 
 v1 is mainly a **stateless translator**. There is no database, no login, and nothing is saved between page reloads — that's intentional and deferred to a later version (see [Roadmap](#roadmap)). The one deliberate exception is the PDF Converter described below, which does use a local server step.

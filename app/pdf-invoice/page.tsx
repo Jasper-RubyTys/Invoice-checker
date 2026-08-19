@@ -64,6 +64,16 @@ export default function PdfInvoicePage() {
 
     try {
       const response = await fetch("/api/extract-pdf", { method: "POST", body: formData });
+
+      if (!response.ok) {
+        setError({
+          kind: "unknown",
+          message: "Deze functie vereist een actieve server en is niet beschikbaar in deze demo-versie.",
+        });
+        setStatus("error");
+        return;
+      }
+
       const result: ExtractResponse = await response.json();
 
       if (!result.ok || !result.invoice) {
