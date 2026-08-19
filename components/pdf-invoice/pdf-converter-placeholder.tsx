@@ -21,7 +21,7 @@ export function PdfConverterPlaceholder() {
             <h2 className="text-lg font-semibold">Nog in de steigers</h2>
             <p className="text-sm text-foreground-muted">
               De PDF Converter leest facturen uit met een Python-server die in deze demo-omgeving
-              niet draait. Uploaden is hier daarom uitgeschakeld — in de volledige app werkt deze
+              niet draait. Uploaden is hier daarom uitgeschakeld in de volledige app werkt deze
               functie gewoon.
             </p>
           </div>
