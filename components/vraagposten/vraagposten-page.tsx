@@ -155,7 +155,10 @@ export function VraagpostenPage({ initialVraagposten }: VraagpostenPageProps) {
                               size="sm"
                               onClick={() => setReopenTarget(selected)}
                               disabled={
-                                !answers[selected.id] || confirmingId === selected.id || reopeningId === selected.id
+                                !answers[selected.id] ||
+                                Boolean(financeNotes[selected.id]) ||
+                                confirmingId === selected.id ||
+                                reopeningId === selected.id
                               }
                               title="Stuur terug naar Directie met een notitie"
                             >
@@ -167,7 +170,10 @@ export function VraagpostenPage({ initialVraagposten }: VraagpostenPageProps) {
                               size="sm"
                               onClick={() => handleConfirmClick(selected.id)}
                               disabled={
-                                !answers[selected.id] || confirmingId === selected.id || reopeningId === selected.id
+                                !answers[selected.id] ||
+                                Boolean(financeNotes[selected.id]) ||
+                                confirmingId === selected.id ||
+                                reopeningId === selected.id
                               }
                               title="Markeer als geboekt in Exact Online"
                             >

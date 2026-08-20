@@ -1,21 +1,25 @@
 # PDF Invoice Converter — Function Reference
 
-This document describes every function in the PDF Converter feature (`/pdf-invoice`), file by file. For the "why" behind the feature and its one deliberate exception to the app's client-side design, see [`docs/v1-overview.md`](../v1-overview.md#pdf-converter) and the [README's architecture section](../../README.md#pdf-converter-architecture).
+This document describes every function in the PDF Converter pipeline, file by file. For the "why" behind the feature and its one deliberate exception to the app's client-side design, see [`docs/v1-overview.md`](../v1-overview.md#pdf-converter) and the [README's architecture section](../../README.md#pdf-converter-architecture).
+
+The pipeline has two consumers: the standalone `/pdf-invoice` page (upload any PDF) and, inside Vraagposten, `components/vraagposten/vraagpost-xml-convert-modal.tsx` (convert a PDF Directie already attached to an answer — see [`docs/vraagposten-overview.md`](../vraagposten-overview.md)). Both share `lib/use-pdf-extraction.ts` for the extraction call itself and `components/invoice-edit-form.tsx` for review + download, so this reference and everything below `runPdfExtractor` applies to both.
 
 ## Data flow
 
 ```
-Browser (app/pdf-invoice/page.tsx)
-  → POST multipart PDF → app/api/extract-pdf/route.ts
-      → lib/server/run-pdf-extractor.ts: runPdfExtractor(pdfBytes)
-          → spawns python3 scripts/extract_invoice.py, PDF bytes over stdin
-              → scripts/extract_invoice.py: main()
-                  → pdfplumber: per-page text + tables
-                  → scripts/extractors/__init__.py: resolve(hint) → extractor function
-                  → scripts/extractors/generic.py: extract(doc) → partial invoice dict
-              ← one JSON line on stdout
-          ← mapRawInvoice(raw) fills defaults, buyer, computed totals
-  ← { ok, invoice, rawText, uncertainFields }
+Browser (app/pdf-invoice/page.tsx, or
+         components/vraagposten/vraagpost-xml-convert-modal.tsx)
+  → lib/use-pdf-extraction.ts: usePdfExtraction().extract(file)
+      → POST multipart PDF → app/api/extract-pdf/route.ts
+          → lib/server/run-pdf-extractor.ts: runPdfExtractor(pdfBytes)
+              → spawns python3 scripts/extract_invoice.py, PDF bytes over stdin
+                  → scripts/extract_invoice.py: main()
+                      → pdfplumber: per-page text + tables
+                      → scripts/extractors/__init__.py: resolve(hint) → extractor function
+                      → scripts/extractors/generic.py: extract(doc) → partial invoice dict
+                  ← one JSON line on stdout
+              ← mapRawInvoice(raw) fills defaults, buyer, computed totals
+      ← { ok, invoice, rawText, uncertainFields }
   → components/invoice-edit-form.tsx: InvoiceEditForm (review/correct)
   → lib/build-ubl-invoice.ts: buildUblInvoiceXml(invoice) (client-side)
   → downloaded as UBL XML
@@ -343,17 +347,40 @@ The review/correction form — the only editable form in the app (everything els
 
 ---
 
+## TypeScript/React: `lib/use-pdf-extraction.ts`
+
+Shared client-side hook wrapping the `POST /api/extract-pdf` call and its loading/review/error lifecycle. Extracted so `/pdf-invoice` and the Vraagposten XML-convert modal don't each maintain their own copy of the same fetch/error-handling logic.
+
+### `usePdfExtraction()`
+- **Returns**: `{ status, draft, rawText, uncertainFields, error, extract, reset }`.
+  - **status**: `"idle" | "loading" | "review" | "error"`.
+  - **draft**: `ParsedInvoice | null` — set on a successful extraction.
+  - **rawText**, **uncertainFields**, **error**: as returned by the API (see `runPdfExtractor` above).
+  - **extract(file: File)**: `Promise<void>` — `POST`s `file` to `/api/extract-pdf` as `multipart/form-data` and updates state through `"loading"` to `"review"` or `"error"`. A non-`ok` HTTP response (no server to run the Python extractor at all, e.g. a static export) and a `{ ok: false }` body are both surfaced as `"error"` with a Dutch, user-facing message; a thrown exception (network failure) likewise.
+  - **reset()**: returns to the initial `"idle"` state.
+
+---
+
 ## TypeScript/React: `app/pdf-invoice/page.tsx`
 
 ### `PdfInvoicePage()`
-The route component for `/pdf-invoice`. A small state machine: `"idle" → "loading" → "review" | "error"`.
+The route component for `/pdf-invoice`. A small state machine: `"idle" → "loading" → "review" | "error"`, driven by `usePdfExtraction()`.
 
 - **Returns**: `JSX.Element`.
-- **State**: `status`, `fileName`, `draft` (the `ParsedInvoice` from the server), `rawText`, `uncertainFields`, `error`.
-- **`reset()`**: returns to `"idle"` and clears all derived state — passed to `InvoiceEditForm`/the error card as `onStartOver`/the retry action.
+- **State**: `fileName`, `pdfUrl` (local to this component); `status`, `draft`, `rawText`, `uncertainFields`, `error` (from `usePdfExtraction()`).
+- **`reset()`**: revokes `pdfUrl`, calls the hook's `reset()`, and clears `fileName`/`pdfUrl` — passed to `InvoiceEditForm`/the error card as `onStartOver`/the retry action.
 - **`handleFiles(files)`**: the `InvoiceDropzone`'s `onFiles` callback.
   - Takes only `files[0]` (one PDF at a time by design — unlike the XML flow, which accepts a batch).
-  - Sets `status: "loading"`, `POST`s the file as `multipart/form-data` to `/api/extract-pdf`.
-  - On a non-`ok` response (or a network/parse exception), sets `error` and `status: "error"`.
-  - On success, seeds `draft`/`rawText`/`uncertainFields` from the response and sets `status: "review"`.
+  - Sets `fileName`/`pdfUrl`, then calls the hook's `extract(file)`.
 - **Rendering**: the dropzone (idle), a "Bezig met het uitlezen…" card (loading), an error card with a "Opnieuw proberen" button (error), or `InvoiceEditForm` (review).
+
+---
+
+## TypeScript/React: `components/vraagposten/vraagpost-xml-convert-modal.tsx`
+
+### `VraagpostXmlConvertModal({ file, pdfUrl, onClose })`
+The second consumer of `usePdfExtraction()` — converts a Vraagpost answer's already-attached invoice PDF, opened from `components/vraagposten/vraagpost-answer-view.tsx`'s "Converteer naar XML" button. Unlike `/pdf-invoice`, there's no dropzone: extraction starts immediately in a `useEffect` on mount, against the one `file` it's given.
+
+- **file**: `File` — `answer.invoicePdf`. **pdfUrl**: `string` — its already-created object URL (owned by the caller, not this component). **onClose**: `() => void`.
+- **Returns**: `JSX.Element` — a modal dialog (backdrop, Escape-to-close, X button) matching `vraagpost-reopen-modal.tsx`'s pattern, sized to fit `InvoiceEditForm`'s two-column layout.
+- **Rendering**: same loading/error/review states as `/pdf-invoice`, reusing `InvoiceEditForm` for review + download. `InvoiceEditForm`'s "Opnieuw beginnen" button is wired to `onClose` here (not a re-extract) — re-parsing the same file would just repeat the same result, so "start over" means close and reopen via the button instead. The error state's own "Opnieuw proberen" button does call `extract(file)` again, for a genuine retry.

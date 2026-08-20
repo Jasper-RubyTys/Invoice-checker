@@ -15,6 +15,10 @@ import { FinanceNote } from "@/lib/vraagpost-finance-notes";
 const SENT_FEEDBACK_DURATION = 1800;
 const TOAST_DURATION = 2500;
 
+function filesChanged(a: File[], b: File[]): boolean {
+  return a.length !== b.length || a.some((file, index) => file !== b[index]);
+}
+
 interface VraagpostAnswerFormProps {
   vraagpost: Vraagpost;
   existingAnswer: Answer | null;
@@ -40,7 +44,21 @@ export function VraagpostAnswerForm({
   const [invoicePdf, setInvoicePdf] = useState<File | null>(existingAnswer?.invoicePdf ?? null);
 
   const receiptPreviewUrls = useObjectUrls(receiptImages);
-  const canSubmit = note.trim().length > 0 || receiptImages.length > 0 || invoicePdf !== null;
+
+  // Once Directie has sent an answer, it's locked — "bijwerken" only opens up
+  // again after finance reopens the Vraagpost (financeNote set), and even
+  // then Directie must actually change something before resubmitting.
+  const awaitingFinanceReview = Boolean(existingAnswer) && !financeNote;
+  const hasChanges =
+    !existingAnswer
+      ? true
+      : !financeNote
+        ? false
+        : note.trim() !== existingAnswer.note.trim() ||
+          filesChanged(receiptImages, existingAnswer.receiptImages) ||
+          invoicePdf !== existingAnswer.invoicePdf;
+
+  const canSubmit = (note.trim().length > 0 || receiptImages.length > 0 || invoicePdf !== null) && hasChanges;
 
   const removeReceiptImage = (index: number) => {
     setReceiptImages((prev) => prev.filter((_, i) => i !== index));
@@ -140,6 +158,18 @@ export function VraagpostAnswerForm({
           "Antwoord opslaan"
         )}
       </Button>
+
+      {awaitingFinanceReview && (
+        <p className="text-xs text-foreground-muted">
+          Dit antwoord is al verzonden. Wacht tot finance het terugstuurt voordat je het kunt aanpassen.
+        </p>
+      )}
+
+      {Boolean(financeNote) && !hasChanges && (
+        <p className="text-xs text-foreground-muted">
+          Wijzig eerst iets aan je antwoord voordat je het opnieuw verstuurt.
+        </p>
+      )}
 
       {showToast && (
         <div className="vraagpost-toast" role="status">

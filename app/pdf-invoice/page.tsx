@@ -7,20 +7,9 @@ import { PdfConverterPlaceholder } from "@/components/pdf-invoice/pdf-converter-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { PdfUploadError } from "@/lib/pdf-upload-error";
-import { ParsedInvoice } from "@/lib/ubl-invoice";
+import { usePdfExtraction } from "@/lib/use-pdf-extraction";
 
 const IS_STATIC_DEMO = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
-
-type Status = "idle" | "loading" | "review" | "error";
-
-interface ExtractResponse {
-  ok: boolean;
-  invoice?: ParsedInvoice;
-  rawText?: string;
-  uncertainFields?: string[];
-  error?: PdfUploadError;
-}
 
 export default function PdfInvoicePage() {
   if (IS_STATIC_DEMO) {
@@ -40,14 +29,10 @@ export default function PdfInvoicePage() {
 }
 
 function PdfInvoicePageInteractive() {
-  const [status, setStatus] = useState<Status>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [draft, setDraft] = useState<ParsedInvoice | null>(null);
-  const [rawText, setRawText] = useState("");
-  const [uncertainFields, setUncertainFields] = useState<string[]>([]);
-  const [error, setError] = useState<PdfUploadError | null>(null);
   const pdfUrlRef = useRef<string | null>(null);
+  const { status, draft, rawText, uncertainFields, error, extract, reset: resetExtraction } = usePdfExtraction();
 
   const revokePdfUrl = useCallback(() => {
     if (pdfUrlRef.current) {
@@ -60,61 +45,23 @@ function PdfInvoicePageInteractive() {
 
   const reset = useCallback(() => {
     revokePdfUrl();
-    setStatus("idle");
-    setDraft(null);
+    resetExtraction();
     setFileName(null);
     setPdfUrl(null);
-    setError(null);
-    setUncertainFields([]);
-  }, [revokePdfUrl]);
+  }, [revokePdfUrl, resetExtraction]);
 
   const handleFiles = useCallback(async (files: File[]) => {
     const file = files[0];
     if (!file) return;
 
-    setStatus("loading");
     setFileName(file.name);
     revokePdfUrl();
     const objectUrl = URL.createObjectURL(file);
     pdfUrlRef.current = objectUrl;
     setPdfUrl(objectUrl);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await fetch("/api/extract-pdf", { method: "POST", body: formData });
-
-      if (!response.ok) {
-        setError({
-          kind: "unknown",
-          message: "Deze functie vereist een actieve server en is niet beschikbaar in deze demo-versie.",
-        });
-        setStatus("error");
-        return;
-      }
-
-      const result: ExtractResponse = await response.json();
-
-      if (!result.ok || !result.invoice) {
-        setError(result.error ?? { kind: "unknown", message: "Onbekende fout bij het uitlezen van deze factuur." });
-        setStatus("error");
-        return;
-      }
-
-      setDraft(result.invoice);
-      setRawText(result.rawText ?? "");
-      setUncertainFields(result.uncertainFields ?? []);
-      setStatus("review");
-    } catch (err) {
-      setError({
-        kind: "unknown",
-        message: "Kon geen verbinding maken met de server.",
-        detail: err instanceof Error ? err.message : String(err),
-      });
-      setStatus("error");
-    }
-  }, [revokePdfUrl]);
+    await extract(file);
+  }, [revokePdfUrl, extract]);
 
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden print:h-auto print:overflow-visible bg-canvas-page text-foreground">

@@ -37,6 +37,8 @@ Some suppliers only send PDF invoices, which the accounting software can't impor
 
 There are no supplier-specific extraction modules yet — `scripts/extractors/` is a generic, heuristic extractor plus an empty registry (`scripts/extractors/__init__.py`) ready for one once a recurring PDF-only supplier is identified. See [Python setup](#python-setup-pdf-converter) to run this locally, and [`docs/pdf-invoice-converter/functions.md`](docs/pdf-invoice-converter/functions.md) for a function-by-function reference of every file involved.
 
+This pipeline has a second consumer: inside Vraagposten (see [below](#status-vraagposten-first-draft)), finance can preview and convert an invoice PDF Directie already attached to an answer, without leaving that page.
+
 ### Explicitly out of scope for v1
 
 These were deliberate decisions, not oversights — see [Roadmap](#roadmap) for what's planned instead:
@@ -58,7 +60,7 @@ Making room for the dashboard at `/` moved the original XML/spreadsheet checker 
 
 ## Status: Vraagposten (first draft)
 
-A new `/vraagposten` route lets Directie answer open Exact Online "Vraagposten" (unbooked depreciation entries) with a note, a receipt image, and/or an invoice PDF, and lets finance see those answers to book the entry correctly. **This is a mock/placeholder first draft**: the Vraagposten list is fictional sample data, and submitted answers live only in browser memory — nothing is persisted, and a page reload clears them. There is also no real login: a role switcher next to the theme toggle lets anyone flip between the "Finance" and "Directie" view, with no actual access control behind it. See [`docs/vraagposten-overview.md`](docs/vraagposten-overview.md) for the full write-up.
+A new `/vraagposten` route lets Directie answer open Exact Online "Vraagposten" (unbooked depreciation entries) with a note, a receipt image, and/or an invoice PDF, and lets finance see those answers to book the entry correctly. Finance's view previews the attached invoice PDF inline and can convert it to UBL XML on the spot, reusing the same pipeline as the standalone [PDF Converter](#pdf-converter). **This is a mock/placeholder first draft**: the Vraagposten list is fictional sample data, and submitted answers live only in browser memory — nothing is persisted, and a page reload clears them. There is also no real login: a role switcher next to the theme toggle lets anyone flip between the "Finance" and "Directie" view, with no actual access control behind it. See [`docs/vraagposten-overview.md`](docs/vraagposten-overview.md) for the full write-up.
 
 ## Architecture
 
@@ -87,6 +89,7 @@ XML parsing happens with the browser's native `DOMParser`, not a server-side lib
 ### PDF converter architecture
 
 - **`app/api/extract-pdf/route.ts`** — the only server route in this project. Accepts a PDF upload, validates it, and calls `runPdfExtractor`.
+- **`lib/use-pdf-extraction.ts`** — client-side hook wrapping the call to that route and its loading/review/error states. Shared by `/pdf-invoice` and `components/vraagposten/vraagpost-xml-convert-modal.tsx` so the two consumers can't drift.
 - **`lib/server/run-pdf-extractor.ts`** — server-only (never import from a `"use client"` file). Spawns the Python script, pipes the PDF bytes over stdin, reads JSON from stdout, and maps the result to a `ParsedInvoice` — filling in defaults, the fixed Ruby Toys buyer identity (`lib/config.ts`), and computed totals (`lib/invoice-totals.ts`) — plus a list of fields the extractor couldn't find (`uncertainFields`), used to flag them in the review form. Every failure path (Python missing, a timeout, a non-zero exit, malformed JSON) resolves to a typed error and is logged server-side; nothing throws.
 - **`scripts/extract_invoice.py`** — CLI entry point: reads PDF bytes from stdin, uses `pdfplumber` to extract per-page text and tables, and prints one JSON line to stdout.
 - **`scripts/extractors/generic.py`** — the supplier-agnostic heuristic extractor: regex/label matching for Dutch invoice fields (factuurnummer, datums, BTW/KvK-nummer, IBAN) plus table-based line-item detection, with a single-line fallback so the review form is never empty.
