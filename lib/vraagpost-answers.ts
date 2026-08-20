@@ -6,7 +6,7 @@
 export interface Answer {
   vraagpostId: string;
   note: string;
-  receiptImage: File | null;
+  receiptImages: File[];
   invoicePdf: File | null;
   /** ISO timestamp, set client-side on submit. */
   submittedAt: string;

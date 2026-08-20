@@ -1,12 +1,12 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { InvoiceDropzone } from "@/components/invoice-dropzone";
 import { Button } from "@/components/ui/button";
 import { ReceiptPhotoInput } from "@/components/vraagposten/receipt-photo-input";
 import { formatDate } from "@/lib/format";
-import { useObjectUrl } from "@/lib/use-object-url";
+import { useObjectUrls } from "@/lib/use-object-url";
 import { Answer } from "@/lib/vraagpost-answers";
 import { Vraagpost } from "@/lib/vraagpost-data";
 import { FinanceNote } from "@/lib/vraagpost-finance-notes";
@@ -36,11 +36,15 @@ export function VraagpostAnswerForm({
   onSubmit,
 }: VraagpostAnswerFormProps) {
   const [note, setNote] = useState(existingAnswer?.note ?? "");
-  const [receiptImage, setReceiptImage] = useState<File | null>(existingAnswer?.receiptImage ?? null);
+  const [receiptImages, setReceiptImages] = useState<File[]>(existingAnswer?.receiptImages ?? []);
   const [invoicePdf, setInvoicePdf] = useState<File | null>(existingAnswer?.invoicePdf ?? null);
 
-  const receiptPreviewUrl = useObjectUrl(receiptImage);
-  const canSubmit = note.trim().length > 0 || receiptImage !== null || invoicePdf !== null;
+  const receiptPreviewUrls = useObjectUrls(receiptImages);
+  const canSubmit = note.trim().length > 0 || receiptImages.length > 0 || invoicePdf !== null;
+
+  const removeReceiptImage = (index: number) => {
+    setReceiptImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const [justSubmitted, setJustSubmitted] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -61,7 +65,7 @@ export function VraagpostAnswerForm({
     onSubmit({
       vraagpostId: vraagpost.id,
       note,
-      receiptImage,
+      receiptImages,
       invoicePdf,
       submittedAt: new Date().toISOString(),
       submittedByRole: "directie",
@@ -74,8 +78,8 @@ export function VraagpostAnswerForm({
     <div className="vraagpost-answer-form">
       {financeNote && (
         <div className="vraagpost-finance-note">
-          <span className="text-sm font-medium">Finance heeft dit teruggestuurd</span>
-          <p className="text-sm whitespace-pre-wrap">{financeNote.note}</p>
+          <span className="text-sm font-medium">Finance heeft teruggestuurd:</span>
+          <p className="text-sm whitespace-pre-wrap">"{financeNote.note}"</p>
           <span className="text-xs">Teruggestuurd op {formatDate(financeNote.createdAt)}</span>
         </div>
       )}
@@ -87,14 +91,23 @@ export function VraagpostAnswerForm({
         onChange={(event) => setNote(event.target.value)}
       />
 
-      <ReceiptPhotoInput onFiles={(files) => setReceiptImage(files[0] ?? null)} />
-      {receiptImage && (
+      <ReceiptPhotoInput onFiles={(files) => setReceiptImages((prev) => [...prev, ...files])} />
+      {receiptImages.length > 0 && (
         <div className="vraagpost-answer-preview">
-          {receiptPreviewUrl && (
-            // eslint-disable-next-line @next/next/no-img-element -- transient blob: preview, not an optimizable asset
-            <img src={receiptPreviewUrl} alt="Voorbeeld van de bon" />
-          )}
-          <span className="text-xs text-foreground-muted">{receiptImage.name}</span>
+          {receiptImages.map((file, index) => (
+            <div key={`${file.name}-${index}`} className="vraagpost-image-thumb">
+              {/* eslint-disable-next-line @next/next/no-img-element -- transient blob: preview, not an optimizable asset */}
+              <img src={receiptPreviewUrls[index]} alt="Voorbeeld van de bon" />
+              <button
+                type="button"
+                className="vraagpost-image-remove"
+                onClick={() => removeReceiptImage(index)}
+                aria-label={`Verwijder ${file.name}`}
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
 

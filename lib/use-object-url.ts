@@ -16,3 +16,16 @@ export function useObjectUrl(file: File | null): string | null {
 
   return url;
 }
+
+/** Same as `useObjectUrl`, but for a list of files. */
+export function useObjectUrls(files: File[]): string[] {
+  const urls = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
+
+  useEffect(() => {
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [urls]);
+
+  return urls;
+}

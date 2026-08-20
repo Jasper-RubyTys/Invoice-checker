@@ -1154,8 +1154,19 @@
   }
   .vraagpost-answer-preview {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
     gap: var(--spacing-12);
+  }
+  .vraagpost-image-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-4);
+  }
+  .vraagpost-image-thumb {
+    position: relative;
+    display: inline-flex;
   }
   .vraagpost-answer-preview img {
     width: 64px;
@@ -1163,6 +1174,21 @@
     object-fit: cover;
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border-subtle);
+    cursor: pointer;
+  }
+  .vraagpost-image-remove {
+    position: absolute;
+    top: calc(-1 * var(--spacing-8));
+    right: calc(-1 * var(--spacing-8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border-subtle);
+    background: var(--color-canvas-raised);
+    color: var(--color-foreground);
     cursor: pointer;
   }
   .vraagpost-finance-note {
