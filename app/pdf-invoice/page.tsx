@@ -66,7 +66,10 @@ function PdfInvoicePageInteractive() {
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden print:h-auto print:overflow-visible bg-canvas-page text-foreground">
       <div className="app-page-intro no-print">
-        <h1 className="text-lg font-semibold">PDF Converter</h1>
+        <div className="flex flex-col">
+          <h1 className="text-lg font-semibold">PDF Converter</h1>
+          <i><p className="text-sm text-foreground-muted"><b>Let op:</b> Deze functie exporteert het XML factuur alleen gefilterd op BTW percentages</p></i>
+        </div>
       </div>
 
       <main className={`app-detail flex-1 ${status === "idle" ? "min-h-0" : ""}`}>
@@ -75,7 +78,7 @@ function PdfInvoicePageInteractive() {
             onFiles={handleFiles}
             accept=".pdf,application/pdf"
             title="Sleep een PDF-factuur hierheen, of klik om te kiezen"
-            hint="Eén factuur per keer — controleer de uitgelezen gegevens voordat je de XML downloadt"
+            hint="Eén factuur per keer, controleer de uitgelezen gegevens voordat je de XML downloadt"
             className="dropzone-fill"
           />
         )}

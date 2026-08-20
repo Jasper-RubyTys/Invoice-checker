@@ -27,7 +27,12 @@ export function VraagpostAnswerView({ answer }: { answer: Answer | null }) {
 
   return (
     <div className="vraagpost-answer-form">
-      <p className="text-sm whitespace-pre-wrap">{answer.note || "—"}</p>
+      {answer.note && (
+        <div className="vraagpost-directie-note">
+          <span className="text-sm font-medium">Directie:</span>
+          <p className="text-sm whitespace-pre-wrap">{`"${answer.note}"`}</p>
+        </div>
+      )}
 
       {receiptUrls.length > 0 && (
         <div className="vraagpost-answer-preview">
